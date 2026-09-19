@@ -24,6 +24,10 @@ games.io is a dark, responsive game directory for finding rules, setup notes, an
 
 - `artifacts/games-io/src/App.tsx` — routed SPA shell and primary UI flows
 - `artifacts/games-io/src/data/games.ts` — typed local game catalog, category tree, and search helpers
+- `artifacts/games-io/src/data/catalog.ts` — localStorage-backed catalog and inventory model
+- `artifacts/games-io/src/hooks/use-catalog.ts` — catalog editing actions
+- `artifacts/games-io/src/components/AdminPanel.tsx` — signed-in local admin desk
+- `artifacts/games-io/src/components/InventoryBank.tsx` — per-game inventory gallery
 - `artifacts/games-io/src/index.css` — dark visual system, responsive rules, motion, and print styles
 - `artifacts/games-io/src/components/` — shared scaffolded UI primitives
 
@@ -32,6 +36,7 @@ games.io is a dark, responsive game directory for finding rules, setup notes, an
 - The first release is frontend-only and uses a typed local data source so the prototype works without a database or external service.
 - Wouter provides route-like navigation while preserving the app's lightweight single-page feel.
 - Printing is handled with the browser print dialog and dedicated print CSS so a game guide can be saved as a simple PDF.
+- Clerk provides user sign-in; the current admin unlock and catalog edits are intentionally browser-local for this prototype.
 
 ## Product
 
@@ -40,6 +45,7 @@ games.io is a dark, responsive game directory for finding rules, setup notes, an
 - Read game objectives, setup details, equipment, and step-by-step rules.
 - Track multiple players with +/- scoring controls and reset the scorekeeper.
 - Copy a game link or print/save a cheat sheet.
+- Sign in, unlock the local admin desk, manage categories and game articles, and add/remove per-game inventory images.
 
 ## User preferences
 
@@ -49,6 +55,7 @@ No additional preferences recorded.
 
 - The artifact workflow supplies `PORT` and `BASE_PATH`; run the web app through the managed workflow rather than starting Vite at the workspace root.
 - Keep the local game data typed when adding new games so search and detail views stay in sync.
+- The admin password gate is a prototype-only client-side control; it is not sufficient as production authorization.
 
 ## Pointers
 
