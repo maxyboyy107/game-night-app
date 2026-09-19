@@ -1,0 +1,112 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --font-sans: var(--app-font-sans);
+  --font-mono: var(--app-font-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root,
+.dark {
+  color-scheme: dark;
+  --background: 234 22% 8%;
+  --foreground: 38 36% 95%;
+  --border: 235 16% 18%;
+  --input: 235 18% 22%;
+  --ring: 37 98% 66%;
+  --card: 235 20% 12%;
+  --card-foreground: 38 36% 95%;
+  --primary: 37 98% 66%;
+  --primary-foreground: 234 22% 8%;
+  --secondary: 235 16% 18%;
+  --secondary-foreground: 38 36% 95%;
+  --muted: 234 15% 14%;
+  --muted-foreground: 232 12% 64%;
+  --accent: 170 67% 53%;
+  --accent-foreground: 234 22% 8%;
+  --destructive: 2 76% 60%;
+  --destructive-foreground: 38 36% 95%;
+  --app-font-sans: "Avenir Next", "Trebuchet MS", sans-serif;
+  --app-font-mono: "SFMono-Regular", "Cascadia Code", "Courier New", monospace;
+  --radius: 0.9rem;
+  --shadow-card: 0 18px 60px rgba(0, 0, 0, 0.24);
+}
+
+* { box-sizing: border-box; }
+html { min-width: 320px; background: hsl(var(--background)); }
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100dvh;
+  background:
+    radial-gradient(circle at 82% 9%, rgba(249, 190, 75, 0.08), transparent 28rem),
+    radial-gradient(circle at 8% 72%, rgba(54, 205, 175, 0.05), transparent 24rem),
+    hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--app-font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+button, input { font: inherit; }
+button { cursor: pointer; }
+button:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 2px solid hsl(var(--primary));
+  outline-offset: 3px;
+}
+a { color: inherit; text-decoration: none; }
+
+.noise {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  z-index: 50;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.8'/%3E%3C/svg%3E");
+}
+.page-enter { animation: page-in 440ms cubic-bezier(.2,.8,.2,1) both; }
+.stagger-in { animation: rise-in 540ms cubic-bezier(.2,.8,.2,1) both; }
+.stagger-1 { animation-delay: 70ms; }
+.stagger-2 { animation-delay: 130ms; }
+.stagger-3 { animation-delay: 190ms; }
+.stagger-4 { animation-delay: 250ms; }
+.stagger-5 { animation-delay: 310ms; }
+.card-lift { transition: transform 220ms ease, border-color 220ms ease, background-color 220ms ease, box-shadow 220ms ease; }
+.card-lift:hover { transform: translateY(-4px); border-color: rgba(249,190,75,.55); box-shadow: 0 16px 40px rgba(0,0,0,.22); }
+.pressable { transition: transform 140ms ease, background-color 180ms ease, color 180ms ease; }
+.pressable:active { transform: scale(.97); }
+.print-only { display: none; }
+
+@keyframes page-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes rise-in { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+@media print {
+  body { background: #fff; color: #171821; }
+  .noise, .no-print { display: none !important; }
+  .print-only { display: block; }
+  .page-enter { animation: none; }
+  .print-card { border: 1px solid #c7c7c7 !important; background: #fff !important; color: #171821 !important; box-shadow: none !important; }
+}

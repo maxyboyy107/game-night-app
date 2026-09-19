@@ -1,6 +1,6 @@
-# [Project name]
+# games.io
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+games.io is a dark, responsive game directory for finding rules, setup notes, and quick scorekeeping tools.
 
 ## Run & Operate
 
@@ -22,23 +22,33 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/games-io/src/App.tsx` — routed SPA shell and primary UI flows
+- `artifacts/games-io/src/data/games.ts` — typed local game catalog, category tree, and search helpers
+- `artifacts/games-io/src/index.css` — dark visual system, responsive rules, motion, and print styles
+- `artifacts/games-io/src/components/` — shared scaffolded UI primitives
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The first release is frontend-only and uses a typed local data source so the prototype works without a database or external service.
+- Wouter provides route-like navigation while preserving the app's lightweight single-page feel.
+- Printing is handled with the browser print dialog and dedicated print CSS so a game guide can be saved as a simple PDF.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Search games by title, alternate names, descriptions, and category labels.
+- Browse from four primary categories through nested category levels with breadcrumbs.
+- Read game objectives, setup details, equipment, and step-by-step rules.
+- Track multiple players with +/- scoring controls and reset the scorekeeper.
+- Copy a game link or print/save a cheat sheet.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+No additional preferences recorded.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- The artifact workflow supplies `PORT` and `BASE_PATH`; run the web app through the managed workflow rather than starting Vite at the workspace root.
+- Keep the local game data typed when adding new games so search and detail views stay in sync.
 
 ## Pointers
 

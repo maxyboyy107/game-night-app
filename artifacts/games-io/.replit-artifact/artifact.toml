@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "games.io"
+description = "A responsive dark-mode game directory and rules lookup app with searchable games, nested category navigation, game detail pages, scoring tools, and printable cheat sheets."
+version = "1.0.0"
+id = "artifacts/games-io"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22514
+
+[services.development]
+run = "pnpm --filter @workspace/games-io run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/games-io", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/games-io/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22514"
+BASE_PATH = "/"
