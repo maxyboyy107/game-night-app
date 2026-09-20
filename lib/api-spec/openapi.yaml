@@ -10,6 +10,10 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: Catalog
+    description: Shared game catalog and protected admin editing.
+  - name: Storage
+    description: Object storage upload and serving endpoints.
 paths:
   /healthz:
     get:
@@ -24,6 +28,118 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /catalog:
+    get:
+      tags: [Catalog]
+      operationId: getCatalog
+      summary: Get the shared game catalog
+      responses:
+        "200":
+          description: Current catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogState"
+    put:
+      tags: [Catalog]
+      operationId: saveCatalog
+      summary: Save the shared game catalog
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogInput"
+      responses:
+        "200":
+          description: Saved catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogState"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Admin unlock required
+  /catalog/admin/unlock:
+    post:
+      tags: [Catalog]
+      operationId: unlockCatalogAdmin
+      summary: Unlock catalog editing for the signed-in user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminUnlockInput"
+      responses:
+        "200":
+          description: Admin session established
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUnlockResponse"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Incorrect admin password
+  /catalog/admin/status:
+    get:
+      tags: [Catalog]
+      operationId: getCatalogAdminStatus
+      summary: Check whether catalog editing is unlocked
+      responses:
+        "200":
+          description: Admin session status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStatusResponse"
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Request a presigned URL for an admin image upload
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadUrlRequest"
+      responses:
+        "200":
+          description: Presigned upload URL generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadUrlResponse"
+        "400":
+          description: Invalid upload metadata
+        "401":
+          description: Sign-in required
+        "403":
+          description: Admin unlock required
+  /storage/objects/{objectPath}:
+    get:
+      tags: [Storage]
+      operationId: getStorageObject
+      summary: Serve an uploaded object
+      parameters:
+        - name: objectPath
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Object content
+          content:
+            "*/*":
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Object not found
 components:
   schemas:
     HealthStatus:
@@ -33,4 +149,90 @@ components:
           type: string
       required:
         - status
+    GameCategory:
+      type: object
+      required: [slug, name, description, color]
+      properties:
+        slug: { type: string }
+        name: { type: string }
+        description: { type: string }
+        color: { type: string }
+        children:
+          type: array
+          items: { type: string }
+    Game:
+      type: object
+      required: [slug, title, alternateNames, categorySlugs, eyebrow, description, players, setup, age, duration, equipment, objective, rules, accent, icon]
+      properties:
+        slug: { type: string }
+        title: { type: string }
+        alternateNames: { type: array, items: { type: string } }
+        categorySlugs: { type: array, items: { type: string } }
+        eyebrow: { type: string }
+        description: { type: string }
+        players: { type: string }
+        setup: { type: string }
+        age: { type: string }
+        duration: { type: string }
+        equipment: { type: array, items: { type: string } }
+        objective: { type: string }
+        rules: { type: array, items: { type: string } }
+        accent: { type: string }
+        icon: { type: string }
+    InventoryItem:
+      type: object
+      required: [id, name, description]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        description: { type: string }
+        imageDataUrl: { type: [string, "null"] }
+        imagePath: { type: [string, "null"] }
+    CatalogState:
+      type: object
+      required: [categories, primaryCategories, games, inventory]
+      properties:
+        categories:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/GameCategory"
+        primaryCategories: { type: array, items: { type: string } }
+        games: { type: array, items: { $ref: "#/components/schemas/Game" } }
+        inventory:
+          type: object
+          additionalProperties:
+            type: array
+            items: { $ref: "#/components/schemas/InventoryItem" }
+    CatalogInput:
+      $ref: "#/components/schemas/CatalogState"
+    AdminUnlockInput:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string, minLength: 1 }
+    AdminUnlockResponse:
+      type: object
+      required: [unlocked]
+      properties:
+        unlocked: { type: boolean }
+    AdminStatusResponse:
+      type: object
+      required: [unlocked]
+      properties:
+        unlocked: { type: boolean }
+    UploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name: { type: string, minLength: 1 }
+        size: { type: integer, minimum: 1 }
+        contentType: { type: string, minLength: 1 }
+    UploadUrlResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL: { type: string, format: uri }
+        objectPath: { type: string }
+        metadata:
+          $ref: "#/components/schemas/UploadUrlRequest"
 

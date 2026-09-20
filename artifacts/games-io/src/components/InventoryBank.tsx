@@ -24,7 +24,7 @@ export function InventoryBank({ game, items, adminUnlocked, onRemove }: Inventor
           {items.map((item) => (
             <article key={item.id} className="group relative overflow-hidden rounded-2xl border border-white/[0.09] bg-[#171821] p-2" data-testid={`card-inventory-${item.id}`}>
               <div className="aspect-[1.25] overflow-hidden rounded-xl bg-[#24232a]">
-                {item.imageDataUrl ? <img src={item.imageDataUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="grid h-full place-items-center text-[#777984]"><PackageOpen size={28} /></div>}
+                {(item.imagePath || item.imageDataUrl) ? <img src={item.imagePath ? `/api/storage${item.imagePath}` : item.imageDataUrl} alt={item.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" /> : <div className="grid h-full place-items-center text-[#777984]"><PackageOpen size={28} /></div>}
               </div>
               <div className="px-2 pb-2 pt-3">
                 <h3 className="truncate text-sm font-semibold text-[#f7f0e4]">{item.name}</h3>

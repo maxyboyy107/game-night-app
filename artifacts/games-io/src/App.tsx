@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
+import { getCatalogAdminStatus, requestUploadUrl, unlockCatalogAdmin } from '@workspace/api-client-react';
 import { ArrowLeft, ArrowRight, ChevronRight, CircleHelp, Clock3, Copy, Filter, Gamepad2, LockKeyhole, LogIn, LogOut, Minus, Plus, Printer, RotateCcw, Search, Sparkles, Users, X } from 'lucide-react';
 import { Link, Router as WouterRouter, Route, Switch, useLocation } from 'wouter';
 import { AdminPanel } from './components/AdminPanel';
@@ -83,8 +84,8 @@ function AuthControls({ onAdmin, adminUnlocked }: { onAdmin: () => void; adminUn
   return <div className="flex items-center gap-2"><button type="button" onClick={onAdmin} className="flex items-center gap-2 rounded-lg border border-white/10 px-2.5 py-2 text-xs font-semibold text-[#a2a2ae] hover:border-[#f9be4b]/50 hover:text-[#f9be4b] sm:px-3" data-testid="button-open-admin"><LockKeyhole size={13} /><span className="hidden sm:inline">Admin</span>{adminUnlocked && <span className="rounded-full bg-[#42d1b1]/15 px-1.5 py-0.5 font-mono text-[9px] text-[#42d1b1]">ADMIN</span>}</button><span className="hidden max-w-[150px] truncate text-xs text-[#898997] md:inline" title={email} data-testid="text-account-indicator">{email}</span><button type="button" onClick={() => signOut({ redirectUrl: basePath || '/' })} className="grid h-8 w-8 place-items-center rounded-lg text-[#898997] hover:bg-white/[0.07] hover:text-[#f7f0e4]" aria-label="Log out" data-testid="button-log-out"><LogOut size={15} /></button></div>;
 }
 
-function Shell({ children, onHome, onAdmin, adminUnlocked }: { children: ReactNode; onHome: () => void; onAdmin: () => void; adminUnlocked: boolean }) {
-  return <div className="min-h-[100dvh] overflow-x-hidden"><div className="noise" /><header className="no-print relative z-10 border-b border-white/[0.07]"><div className="mx-auto flex min-h-[72px] max-w-[1180px] items-center justify-between gap-4 px-5 sm:px-8"><Logo onClick={onHome} /><div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#898997]"><span className="hidden lg:inline">A field guide for</span><span className="hidden sm:inline text-[#f7f0e4]">good games</span><span className="hidden sm:block h-2 w-2 rounded-full bg-[#42d1b1]" /><AuthControls onAdmin={onAdmin} adminUnlocked={adminUnlocked} /></div></div></header><main className="relative z-[1]">{children}</main><footer className="no-print mx-auto flex max-w-[1180px] items-center justify-between border-t border-white/[0.07] px-5 py-8 text-xs text-[#777984] sm:px-8"><span className="font-mono tracking-tight">games.io / play more, search less</span><span className="hidden sm:inline">A small, opinionated rules library.</span></footer></div>;
+function Shell({ children, onHome, onAdmin, adminUnlocked, hideChrome = false }: { children: ReactNode; onHome: () => void; onAdmin: () => void; adminUnlocked: boolean; hideChrome?: boolean }) {
+  return <div className="min-h-[100dvh] overflow-x-hidden"><div className="noise" />{!hideChrome && <header className="no-print relative z-10 border-b border-white/[0.07]"><div className="mx-auto flex min-h-[72px] max-w-[1180px] items-center justify-between gap-4 px-5 sm:px-8"><Logo onClick={onHome} /><div className="flex items-center gap-3 text-xs font-semibold uppercase tracking-[0.18em] text-[#898997]"><span className="hidden lg:inline">A field guide for</span><span className="hidden sm:inline text-[#f7f0e4]">good games</span><span className="hidden sm:block h-2 w-2 rounded-full bg-[#42d1b1]" /><AuthControls onAdmin={onAdmin} adminUnlocked={adminUnlocked} /></div></div></header>}<main className="relative z-[1]">{children}</main>{!hideChrome && <footer className="no-print mx-auto grid max-w-[1180px] grid-cols-[1fr_auto_1fr] items-center border-t border-white/[0.07] px-5 py-8 text-xs text-[#777984] sm:px-8"><span className="font-mono tracking-tight">games.io / play more, search less</span><span className="justify-self-center font-mono text-[#f9be4b]">v1.0.1</span><span className="hidden justify-self-end sm:inline">A small, opinionated rules library.</span></footer>}</div>;
 }
 
 function SearchBox({ value, onChange, compact = false }: { value: string; onChange: (value: string) => void; compact?: boolean }) {
@@ -101,7 +102,7 @@ function GameCard({ game, onOpen, index = 0 }: { game: Game; onOpen: (slug: stri
 
 function CategoryCard({ slug, category, count, index, onOpen }: { slug: string; category?: GameCategory; count: number; index: number; onOpen: (slug: string) => void }) {
   if (!category) return null;
-  return <button onClick={() => onOpen(slug)} className={`stagger-in stagger-${Math.min(index + 1, 5)} card-lift group relative min-h-[164px] overflow-hidden rounded-2xl border border-white/[0.09] bg-[#171821]/80 p-5 text-left`} data-testid={`card-category-${slug}`}><div className="absolute -right-7 -top-7 h-28 w-28 rounded-full opacity-10 blur-[1px]" style={{ backgroundColor: category.color }} /><div className="relative flex h-full flex-col justify-between"><div className="flex items-start justify-between"><CategoryMark color={category.color} icon={['01', '02', '03', '04'][index % 4]} /><ArrowRight size={18} className="text-[#666875] transition-transform group-hover:translate-x-1" /></div><div><h3 className="mt-4 text-xl font-semibold tracking-[-0.04em]">{category.name}</h3><div className="mt-1 flex items-center gap-2 text-sm text-[#898997]"><span>{category.description}</span><span className="h-1 w-1 rounded-full bg-[#666875]" /><span>{count} {count === 1 ? 'guide' : 'guides'}</span></div></div></div></button>;
+  return <button onClick={() => onOpen(slug)} className={`stagger-in stagger-${Math.min(index + 1, 5)} card-lift group relative min-h-[164px] overflow-hidden rounded-2xl border border-white/[0.09] bg-[#171821]/80 p-5 text-left`} data-testid={`card-category-${slug}`}><div className="absolute -right-7 -top-7 h-28 w-28 rounded-full opacity-10 blur-[1px]" style={{ backgroundColor: category.color }} /><div className="relative flex h-full flex-col justify-between"><div className="flex items-start justify-between"><CategoryMark color={category.color} icon={String(index + 1).padStart(2, '0')} /><ArrowRight size={18} className="text-[#666875] transition-transform group-hover:translate-x-1" /></div><div><h3 className="mt-4 text-xl font-semibold tracking-[-0.04em]">{category.name}</h3><div className="mt-1 flex items-center gap-2 text-sm text-[#898997]"><span>{category.description}</span><span className="h-1 w-1 rounded-full bg-[#666875]" /><span>{count} {count === 1 ? 'guide' : 'guides'}</span></div></div></div></button>;
 }
 
 function searchCatalog(query: string, games: Game[], categories: Record<string, GameCategory>) {
@@ -167,8 +168,23 @@ function AppContent() {
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const userId = user?.id;
-  useEffect(() => { setAdminUnlocked(Boolean(userId && window.localStorage.getItem(`games-io-admin:${userId}`) === 'true')); }, [userId]);
-  const unlockAdmin = () => { if (userId) window.localStorage.setItem(`games-io-admin:${userId}`, 'true'); setAdminUnlocked(true); };
+  useEffect(() => {
+    let active = true;
+    setAdminUnlocked(false);
+    if (userId) void getCatalogAdminStatus().then((result) => { if (active) setAdminUnlocked(result.unlocked); }).catch(() => undefined);
+    return () => { active = false; };
+  }, [userId]);
+  const unlockAdmin = async (password: string) => {
+    const result = await unlockCatalogAdmin({ password });
+    setAdminUnlocked(result.unlocked);
+    return result.unlocked;
+  };
+  const uploadInventoryImage = async (file: File) => {
+    const result = await requestUploadUrl({ name: file.name, size: file.size, contentType: file.type });
+    const upload = await fetch(result.uploadURL, { method: 'PUT', headers: { 'Content-Type': file.type }, body: file });
+    if (!upload.ok) throw new Error('Image upload failed');
+    return result.objectPath;
+  };
   const path = location.split('?')[0];
   const [, segment, slug] = path.split('/');
   const goHome = () => setLocation('/');
@@ -188,8 +204,9 @@ function AppContent() {
           : isAdminRoute
             ? <Home catalog={catalog} onCategory={goCategory} onGame={goGame} />
             : <NotFound onHome={goHome} />;
-  const adminPanel = user && <AdminPanel categories={catalog.categories} primaryCategories={catalog.primaryCategories} games={catalog.games} inventory={catalog.inventory} unlocked={adminUnlocked} onUnlock={unlockAdmin} onClose={() => { setAdminOpen(false); goHome(); }} onAddCategory={addCategory} onRemoveCategory={removeCategory} onAddGame={addGame} onUpdateGame={updateGame} onRemoveGame={removeGame} onAddInventory={addInventoryItem} onRemoveInventory={removeInventoryItem} onReset={resetCatalog} />;
-  return <Shell onHome={goHome} onAdmin={onAdmin} adminUnlocked={adminUnlocked}>{content}{isAdminRoute && adminPanel}{adminOpen && !isAdminRoute && adminPanel}</Shell>;
+  const adminPanel = user && <AdminPanel categories={catalog.categories} primaryCategories={catalog.primaryCategories} games={catalog.games} inventory={catalog.inventory} unlocked={adminUnlocked} onUnlock={unlockAdmin} onClose={() => { setAdminOpen(false); goHome(); }} onAddCategory={addCategory} onRemoveCategory={removeCategory} onAddGame={addGame} onUpdateGame={updateGame} onRemoveGame={removeGame} onAddInventory={addInventoryItem} onUploadImage={uploadInventoryImage} onRemoveInventory={removeInventoryItem} onReset={resetCatalog} />;
+  const showingAdminPanel = Boolean(adminPanel && (isAdminRoute || adminOpen));
+  return <Shell onHome={goHome} onAdmin={onAdmin} adminUnlocked={adminUnlocked} hideChrome={showingAdminPanel}>{content}{isAdminRoute && adminPanel}{adminOpen && !isAdminRoute && adminPanel}</Shell>;
 }
 
 function SignInPage() {

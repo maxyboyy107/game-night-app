@@ -1,17 +1,35 @@
-import { useCallback, useEffect, useState } from 'react';
-import { createSeedCatalog, readCatalog, slugify, writeCatalog, type CatalogState, type InventoryItem } from '../data/catalog';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { saveCatalog } from '@workspace/api-client-react';
+import { createSeedCatalog, slugify, type CatalogState, type InventoryItem } from '../data/catalog';
 import type { Game, GameCategory } from '../data/games';
 
 export function useCatalog() {
-  const [catalog, setCatalog] = useState<CatalogState>(() => readCatalog());
+  const [catalog, setCatalog] = useState<CatalogState>(() => createSeedCatalog());
+  const saveTimer = useRef<number | undefined>(undefined);
 
   useEffect(() => {
-    writeCatalog(catalog);
-  }, [catalog]);
+    let active = true;
+    void fetch('/api/catalog', { credentials: 'same-origin' })
+      .then((response) => response.ok ? response.json() as Promise<CatalogState> : Promise.reject(new Error('Catalog request failed')))
+      .then((remoteCatalog) => { if (active) setCatalog(remoteCatalog); })
+      .catch(() => undefined);
+    return () => { active = false; };
+  }, []);
+
+  const queueSave = useCallback((next: CatalogState) => {
+    if (saveTimer.current) window.clearTimeout(saveTimer.current);
+    saveTimer.current = window.setTimeout(() => {
+      void saveCatalog(next).catch(() => undefined);
+    }, 250);
+  }, []);
 
   const update = useCallback((change: (current: CatalogState) => CatalogState) => {
-    setCatalog((current) => change(current));
-  }, []);
+    setCatalog((current) => {
+      const next = change(current);
+      queueSave(next);
+      return next;
+    });
+  }, [queueSave]);
 
   const resetCatalog = useCallback(() => setCatalog(createSeedCatalog()), []);
   const addCategory = useCallback((input: Omit<GameCategory, 'slug'> & { slug?: string; parentSlug?: string; primary?: boolean }) => {
