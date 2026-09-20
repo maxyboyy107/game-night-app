@@ -23,9 +23,9 @@ games.io is a dark, responsive game directory for finding rules, setup notes, an
 ## Where things live
 
 - `artifacts/games-io/src/App.tsx` — routed SPA shell and primary UI flows
-- `artifacts/games-io/src/data/games.ts` — typed local game catalog, category tree, and search helpers
-- `artifacts/games-io/src/data/catalog.ts` — localStorage-backed catalog and inventory model
-- `artifacts/games-io/src/hooks/use-catalog.ts` — catalog editing actions
+- `lib/catalog/src/index.ts` — shared catalog types, seed data, search helpers, and normalization
+- `lib/db/src/schema/catalog.ts` — PostgreSQL catalog snapshot
+- `artifacts/games-io/src/hooks/use-catalog.ts` — server-synchronized catalog editing actions
 - `artifacts/games-io/src/components/AdminPanel.tsx` — signed-in local admin desk
 - `artifacts/games-io/src/components/InventoryBank.tsx` — per-game inventory gallery
 - `artifacts/games-io/src/index.css` — dark visual system, responsive rules, motion, and print styles
@@ -33,10 +33,12 @@ games.io is a dark, responsive game directory for finding rules, setup notes, an
 
 ## Architecture decisions
 
-- The first release is frontend-only and uses a typed local data source so the prototype works without a database or external service.
+- The catalog is stored as a PostgreSQL snapshot and loaded through the API so admin edits persist across devices.
+- Catalog writes require a signed-in Clerk user plus the server-side admin password. Keep `ADMIN_PASSWORD` in Replit Secrets only; never compare it in frontend code.
+- Inventory image bytes live in App Storage. Catalog records store object paths, not base64 image payloads.
 - Wouter provides route-like navigation while preserving the app's lightweight single-page feel.
 - Printing is handled with the browser print dialog and dedicated print CSS so a game guide can be saved as a simple PDF.
-- Clerk provides user sign-in; the current admin unlock and catalog edits are intentionally browser-local for this prototype.
+- Clerk provides user sign-in; the API also issues a short-lived, signed admin session cookie after the server verifies `ADMIN_PASSWORD`.
 
 ## Product
 
@@ -45,7 +47,7 @@ games.io is a dark, responsive game directory for finding rules, setup notes, an
 - Read game objectives, setup details, equipment, and step-by-step rules.
 - Track multiple players with +/- scoring controls and reset the scorekeeper.
 - Copy a game link or print/save a cheat sheet.
-- Sign in, unlock the local admin desk, manage categories and game articles, and add/remove per-game inventory images.
+- Sign in, unlock the admin desk, manage categories and game articles, and add/remove per-game inventory images.
 
 ## User preferences
 
@@ -55,7 +57,7 @@ No additional preferences recorded.
 
 - The artifact workflow supplies `PORT` and `BASE_PATH`; run the web app through the managed workflow rather than starting Vite at the workspace root.
 - Keep the local game data typed when adding new games so search and detail views stay in sync.
-- The admin password gate is a prototype-only client-side control; it is not sufficient as production authorization.
+- Do not move the admin password into frontend code or localStorage. The password gate is checked only by the API using Replit Secrets.
 
 ## Pointers
 
