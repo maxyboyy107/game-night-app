@@ -33,6 +33,7 @@ export interface Game {
   rules: string[];
   accent: string;
   icon: string;
+  articleMarkdown?: string;
 }
 
 export interface InventoryItem {
@@ -84,5 +85,112 @@ export interface UploadUrlResponse {
   uploadURL: string;
   objectPath: string;
   metadata?: UploadUrlRequest;
+}
+
+export interface ProfileUpdate {
+  /**
+     * @minLength 3
+     * @maxLength 20
+     * @pattern ^[a-zA-Z0-9_]+$
+     */
+  username: string;
+}
+
+export interface ProfileAvatarUpdate {
+  /** @minLength 1 */
+  avatarPath: string;
+}
+
+export interface ProfileStats {
+  gamesPlayed: number;
+  wins: number;
+  highScore: number;
+}
+
+export interface SessionPlayerInput {
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  name: string;
+  isYou: boolean;
+}
+
+export interface SessionPlayer {
+  name: string;
+  score: number;
+  isYou: boolean;
+}
+
+export interface GameSessionInput {
+  /**
+     * @minItems 2
+     * @maxItems 8
+     */
+  players: SessionPlayerInput[];
+}
+
+export interface GameSessionFinish {
+  /**
+     * @minItems 2
+     * @maxItems 8
+     */
+  players: SessionPlayer[];
+}
+
+export type GameSessionStatus = typeof GameSessionStatus[keyof typeof GameSessionStatus];
+
+
+export const GameSessionStatus = {
+  active: 'active',
+  complete: 'complete',
+} as const;
+
+export interface GameSession {
+  id: string;
+  gameSlug: string;
+  gameTitle?: string;
+  players: SessionPlayer[];
+  score: number;
+  status: GameSessionStatus;
+  /** @nullable */
+  winnerName?: string | null;
+  won: boolean;
+  startedAt: string;
+  /** @nullable */
+  finishedAt?: string | null;
+}
+
+export interface ProfileSummary {
+  username: string;
+  /** @nullable */
+  avatarPath?: string | null;
+  favorites: string[];
+  stats: ProfileStats;
+  recentGames: GameSession[];
+  bestGames: GameSession[];
+}
+
+export interface FavoriteUpdate {
+  favorited: boolean;
+}
+
+export interface FavoriteResponse {
+  gameSlug: string;
+  favorited: boolean;
+}
+
+export interface LeaderboardEntry {
+  username: string;
+  /** @nullable */
+  avatarPath?: string | null;
+  score: number;
+  gamesPlayed: number;
+  wins: number;
+}
+
+export interface Leaderboard {
+  gameSlug: string;
+  entries: LeaderboardEntry[];
 }
 

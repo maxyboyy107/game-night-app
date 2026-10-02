@@ -22,4 +22,5 @@ export interface Game {
   rules: string[];
   accent: string;
   icon: string;
+  articleMarkdown?: string;
 }

@@ -14,6 +14,8 @@ tags:
     description: Shared game catalog and protected admin editing.
   - name: Storage
     description: Object storage upload and serving endpoints.
+  - name: Community
+    description: User profiles, favorites, game sessions, and leaderboards.
 paths:
   /healthz:
     get:
@@ -99,7 +101,7 @@ paths:
     post:
       tags: [Storage]
       operationId: requestUploadUrl
-      summary: Request a presigned URL for an admin image upload
+      summary: Request a presigned URL for a signed-in user's image upload
       requestBody:
         required: true
         content:
@@ -117,8 +119,6 @@ paths:
           description: Invalid upload metadata
         "401":
           description: Sign-in required
-        "403":
-          description: Admin unlock required
   /storage/objects/{objectPath}:
     get:
       tags: [Storage]
@@ -140,6 +140,192 @@ paths:
                 format: binary
         "404":
           description: Object not found
+  /profile:
+    get:
+      tags: [Community]
+      operationId: getProfile
+      summary: Get the signed-in user's profile and game history
+      responses:
+        "200":
+          description: Profile summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileSummary"
+        "401":
+          description: Sign-in required
+    put:
+      tags: [Community]
+      operationId: updateProfile
+      summary: Change the signed-in user's display username
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileSummary"
+        "400":
+          description: Invalid username
+        "401":
+          description: Sign-in required
+        "409":
+          description: Username already in use
+  /profile/avatar:
+    put:
+      tags: [Community]
+      operationId: updateProfileAvatar
+      summary: Save a profile image uploaded to App Storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileAvatarUpdate"
+      responses:
+        "200":
+          description: Updated profile summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileSummary"
+        "401":
+          description: Sign-in required
+  /profile/favorites/{gameSlug}:
+    put:
+      tags: [Community]
+      operationId: setGameFavorite
+      summary: Add or remove a game from the signed-in user's favorites
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FavoriteUpdate"
+      responses:
+        "200":
+          description: Favorite state updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FavoriteResponse"
+        "401":
+          description: Sign-in required
+        "404":
+          description: Game not found
+  /games/{gameSlug}/sessions:
+    post:
+      tags: [Community]
+      operationId: startGameSession
+      summary: Start and save a game session
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameSessionInput"
+      responses:
+        "201":
+          description: Started game session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "400":
+          description: Invalid players
+        "401":
+          description: Sign-in required
+        "404":
+          description: Game not found
+  /games/sessions/{sessionId}:
+    get:
+      tags: [Community]
+      operationId: getGameSession
+      summary: Get a saved session owned by the signed-in user
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Saved session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "401":
+          description: Sign-in required
+        "404":
+          description: Session not found
+    patch:
+      tags: [Community]
+      operationId: finishGameSession
+      summary: Save final scores and complete a game session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameSessionFinish"
+      responses:
+        "200":
+          description: Completed game session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "400":
+          description: Invalid final scores
+        "401":
+          description: Sign-in required
+        "404":
+          description: Session not found
+  /games/{gameSlug}/leaderboard:
+    get:
+      tags: [Community]
+      operationId: getGameLeaderboard
+      summary: Get the best completed scores for a game
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Game leaderboard
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Leaderboard"
 components:
   schemas:
     HealthStatus:
@@ -179,6 +365,7 @@ components:
         rules: { type: array, items: { type: string } }
         accent: { type: string }
         icon: { type: string }
+        articleMarkdown: { type: string }
     InventoryItem:
       type: object
       required: [id, name, description]
@@ -235,4 +422,106 @@ components:
         objectPath: { type: string }
         metadata:
           $ref: "#/components/schemas/UploadUrlRequest"
+    ProfileUpdate:
+      type: object
+      required: [username]
+      properties:
+        username:
+          type: string
+          minLength: 3
+          maxLength: 20
+          pattern: "^[a-zA-Z0-9_]+$"
+    ProfileAvatarUpdate:
+      type: object
+      required: [avatarPath]
+      properties:
+        avatarPath: { type: string, minLength: 1 }
+    ProfileStats:
+      type: object
+      required: [gamesPlayed, wins, highScore]
+      properties:
+        gamesPlayed: { type: integer }
+        wins: { type: integer }
+        highScore: { type: integer }
+    SessionPlayerInput:
+      type: object
+      required: [name, isYou]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 32 }
+        isYou: { type: boolean }
+    SessionPlayer:
+      type: object
+      required: [name, score, isYou]
+      properties:
+        name: { type: string }
+        score: { type: integer }
+        isYou: { type: boolean }
+    GameSessionInput:
+      type: object
+      required: [players]
+      properties:
+        players:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items: { $ref: "#/components/schemas/SessionPlayerInput" }
+    GameSessionFinish:
+      type: object
+      required: [players]
+      properties:
+        players:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items: { $ref: "#/components/schemas/SessionPlayer" }
+    GameSession:
+      type: object
+      required: [id, gameSlug, players, score, status, won, startedAt]
+      properties:
+        id: { type: string, format: uuid }
+        gameSlug: { type: string }
+        gameTitle: { type: string }
+        players: { type: array, items: { $ref: "#/components/schemas/SessionPlayer" } }
+        score: { type: integer }
+        status: { type: string, enum: [active, complete] }
+        winnerName: { type: [string, "null"] }
+        won: { type: boolean }
+        startedAt: { type: string, format: date-time }
+        finishedAt: { type: [string, "null"], format: date-time }
+    ProfileSummary:
+      type: object
+      required: [username, favorites, stats, recentGames, bestGames]
+      properties:
+        username: { type: string }
+        avatarPath: { type: [string, "null"] }
+        favorites: { type: array, items: { type: string } }
+        stats: { $ref: "#/components/schemas/ProfileStats" }
+        recentGames: { type: array, items: { $ref: "#/components/schemas/GameSession" } }
+        bestGames: { type: array, items: { $ref: "#/components/schemas/GameSession" } }
+    FavoriteUpdate:
+      type: object
+      required: [favorited]
+      properties:
+        favorited: { type: boolean }
+    FavoriteResponse:
+      type: object
+      required: [gameSlug, favorited]
+      properties:
+        gameSlug: { type: string }
+        favorited: { type: boolean }
+    LeaderboardEntry:
+      type: object
+      required: [username, score, gamesPlayed, wins]
+      properties:
+        username: { type: string }
+        avatarPath: { type: [string, "null"] }
+        score: { type: integer }
+        gamesPlayed: { type: integer }
+        wins: { type: integer }
+    Leaderboard:
+      type: object
+      required: [gameSlug, entries]
+      properties:
+        gameSlug: { type: string }
+        entries: { type: array, items: { $ref: "#/components/schemas/LeaderboardEntry" } }
 

@@ -2,29 +2,25 @@ import { Readable } from "node:stream";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { RequestUploadUrlBody, RequestUploadUrlResponse } from "@workspace/api-zod";
 import { ObjectNotFoundError, ObjectStorageService } from "../lib/objectStorage";
-import { hasAdminSession, signedInUserId } from "../lib/adminAuth";
+import { signedInUserId } from "../lib/adminAuth";
 
 const router: IRouter = Router();
 const objectStorage = new ObjectStorageService();
 
-function requireAdmin(req: Request, res: Response): boolean {
+function requireSignedIn(req: Request, res: Response): boolean {
   const userId = signedInUserId(req);
   if (!userId) {
     res.status(401).json({ error: "Sign in required" });
-    return false;
-  }
-  if (!hasAdminSession(req, userId)) {
-    res.status(403).json({ error: "Admin unlock required" });
     return false;
   }
   return true;
 }
 
 router.post("/storage/uploads/request-url", async (req, res): Promise<void> => {
-  if (!requireAdmin(req, res)) return;
+  if (!requireSignedIn(req, res)) return;
   const parsed = RequestUploadUrlBody.safeParse(req.body);
-  if (!parsed.success || !parsed.data.contentType.startsWith("image/")) {
-    res.status(400).json({ error: "Only image uploads are supported" });
+  if (!parsed.success || !parsed.data.contentType.startsWith("image/") || parsed.data.size > 8 * 1024 * 1024) {
+    res.status(400).json({ error: "Image uploads must be 8 MB or smaller." });
     return;
   }
   try {

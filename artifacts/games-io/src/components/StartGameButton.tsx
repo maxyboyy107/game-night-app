@@ -1,0 +1,35 @@
+import { useState } from 'react';
+import { ArrowRight, Plus, X } from 'lucide-react';
+import { Link, useLocation } from 'wouter';
+import { getProfile, startGameSession } from '@workspace/api-client-react';
+
+export function StartGameButton({ slug, title, signedIn, username }: { slug: string; title: string; signedIn: boolean; username: string }) {
+  const [, setLocation] = useLocation();
+  const [open, setOpen] = useState(false);
+  const [names, setNames] = useState([username || 'You', 'Player 2']);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const begin = async () => {
+    if (!signedIn) return;
+    const players = names.map((name, index) => ({ name: name.trim(), isYou: index === 0 }));
+    if (players.some((player) => !player.name)) { setError('Give every player a name first.'); return; }
+    setBusy(true); setError('');
+    try {
+      const session = await startGameSession(slug, { players });
+      setLocation(`/game/${slug}/play/${session.id}`);
+    } catch { setError('Could not start this saved game. Try again.'); }
+    finally { setBusy(false); }
+  };
+  return <>
+    {signedIn ? <button type="button" onClick={() => { setOpen(true); void getProfile().then((profile) => setNames((current) => [profile.username, ...current.slice(1)])).catch(() => undefined); }} className="pressable flex items-center gap-2 rounded-xl bg-[#f9be4b] px-4 py-3 text-sm font-bold text-[#171821] hover:bg-[#ffd47e]" data-testid={`button-start-game-${slug}`}><ArrowRight size={16} /> Start game</button> : <Link href="/sign-in" className="pressable flex items-center gap-2 rounded-xl bg-[#f9be4b] px-4 py-3 text-sm font-bold text-[#171821]" data-testid={`link-start-game-sign-in-${slug}`}>Sign in to start a saved game <ArrowRight size={16} /></Link>}
+    {open && <div className="fixed inset-0 z-40 grid place-items-center bg-[#090a0e]/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={`Start ${title}`} data-testid="dialog-start-game">
+      <div className="w-full max-w-lg rounded-2xl border border-white/10 bg-[#171821] p-5 shadow-2xl sm:p-7">
+        <div className="flex items-start justify-between"><div><p className="text-xs font-bold uppercase tracking-[0.18em] text-[#42d1b1]">New table</p><h2 className="mt-2 text-2xl font-semibold tracking-[-0.05em]">Who is playing {title}?</h2></div><button onClick={() => setOpen(false)} className="grid h-9 w-9 place-items-center rounded-lg text-[#898997] hover:bg-white/5" aria-label="Close" data-testid="button-close-start-game"><X size={17} /></button></div>
+        <div className="mt-5 space-y-2">{names.map((name, index) => <label key={index} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-[#12131a] p-3"><span className="w-16 shrink-0 font-mono text-[10px] text-[#777984]">{index === 0 ? 'YOU' : `PLAYER ${index}`}</span><input value={name} onChange={(event) => setNames((current) => current.map((item, i) => i === index ? event.target.value : item))} className="min-w-0 flex-1 bg-transparent text-sm outline-none" aria-label={`Player ${index + 1} name`} data-testid={`input-start-player-${index}`} />{index > 1 && <button onClick={() => setNames((current) => current.filter((_, i) => i !== index))} aria-label={`Remove player ${index + 1}`} className="text-[#777984] hover:text-[#ff9b90]" data-testid={`button-remove-start-player-${index}`}><X size={15} /></button>}</label>)}</div>
+        <button type="button" disabled={names.length >= 8} onClick={() => setNames((current) => [...current, `Player ${current.length + 1}`])} className="mt-3 flex items-center gap-2 text-xs font-semibold text-[#42d1b1] disabled:opacity-40" data-testid="button-add-start-player"><Plus size={14} /> Add player ({names.length}/8)</button>
+        {error && <p role="alert" className="mt-3 text-sm text-[#ff9b90]" data-testid="status-start-game-error">{error}</p>}
+        <button type="button" disabled={busy || names.length < 2} onClick={() => void begin()} className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#f9be4b] py-3 text-sm font-bold text-[#171821] disabled:opacity-50" data-testid="button-confirm-start-game">{busy ? 'Starting table…' : 'Create saved game'} <ArrowRight size={15} /></button>
+      </div>
+    </div>}
+  </>;
+}

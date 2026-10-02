@@ -44,7 +44,8 @@ export const GetCatalogResponse = zod.object({
   "objective": zod.string(),
   "rules": zod.array(zod.string()),
   "accent": zod.string(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "articleMarkdown": zod.string().optional()
 })),
   "inventory": zod.record(zod.string(), zod.array(zod.object({
   "id": zod.string(),
@@ -83,7 +84,8 @@ export const SaveCatalogBody = zod.object({
   "objective": zod.string(),
   "rules": zod.array(zod.string()),
   "accent": zod.string(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "articleMarkdown": zod.string().optional()
 })),
   "inventory": zod.record(zod.string(), zod.array(zod.object({
   "id": zod.string(),
@@ -118,7 +120,8 @@ export const SaveCatalogResponse = zod.object({
   "objective": zod.string(),
   "rules": zod.array(zod.string()),
   "accent": zod.string(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "articleMarkdown": zod.string().optional()
 })),
   "inventory": zod.record(zod.string(), zod.array(zod.object({
   "id": zod.string(),
@@ -154,7 +157,7 @@ export const GetCatalogAdminStatusResponse = zod.object({
 
 
 /**
- * @summary Request a presigned URL for an admin image upload
+ * @summary Request a presigned URL for a signed-in user's image upload
  */
 
 
@@ -191,5 +194,302 @@ export const GetStorageObjectParams = zod.object({
 })
 
 export const GetStorageObjectResponse = zod.unknown()
+
+
+/**
+ * @summary Get the signed-in user's profile and game history
+ */
+export const GetProfileResponse = zod.object({
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "favorites": zod.array(zod.string()),
+  "stats": zod.object({
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int(),
+  "highScore": zod.number().int()
+}),
+  "recentGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+})),
+  "bestGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+}))
+})
+
+
+/**
+ * @summary Change the signed-in user's display username
+ */
+export const updateProfileBodyUsernameMin = 3;
+export const updateProfileBodyUsernameMax = 20;
+
+
+export const updateProfileBodyUsernameRegExp = new RegExp('^[a-zA-Z0-9_]+$');
+
+
+export const UpdateProfileBody = zod.object({
+  "username": zod.string().min(updateProfileBodyUsernameMin).max(updateProfileBodyUsernameMax).regex(updateProfileBodyUsernameRegExp)
+})
+
+export const UpdateProfileResponse = zod.object({
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "favorites": zod.array(zod.string()),
+  "stats": zod.object({
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int(),
+  "highScore": zod.number().int()
+}),
+  "recentGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+})),
+  "bestGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+}))
+})
+
+
+/**
+ * @summary Save a profile image uploaded to App Storage
+ */
+
+
+
+export const UpdateProfileAvatarBody = zod.object({
+  "avatarPath": zod.string().min(1)
+})
+
+export const UpdateProfileAvatarResponse = zod.object({
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "favorites": zod.array(zod.string()),
+  "stats": zod.object({
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int(),
+  "highScore": zod.number().int()
+}),
+  "recentGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+})),
+  "bestGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+}))
+})
+
+
+/**
+ * @summary Add or remove a game from the signed-in user's favorites
+ */
+export const SetGameFavoriteParams = zod.object({
+  "gameSlug": zod.coerce.string()
+})
+
+export const SetGameFavoriteBody = zod.object({
+  "favorited": zod.boolean()
+})
+
+export const SetGameFavoriteResponse = zod.object({
+  "gameSlug": zod.string(),
+  "favorited": zod.boolean()
+})
+
+
+/**
+ * @summary Start and save a game session
+ */
+export const StartGameSessionParams = zod.object({
+  "gameSlug": zod.coerce.string()
+})
+
+export const startGameSessionBodyPlayersItemNameMax = 32;
+
+export const startGameSessionBodyPlayersMin = 2;
+export const startGameSessionBodyPlayersMax = 8;
+
+
+
+export const StartGameSessionBody = zod.object({
+  "players": zod.array(zod.object({
+  "name": zod.string().min(1).max(startGameSessionBodyPlayersItemNameMax),
+  "isYou": zod.boolean()
+})).min(startGameSessionBodyPlayersMin).max(startGameSessionBodyPlayersMax)
+})
+
+export const StartGameSessionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Get a saved session owned by the signed-in user
+ */
+export const GetGameSessionParams = zod.object({
+  "sessionId": zod.coerce.string().uuid()
+})
+
+export const GetGameSessionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Save final scores and complete a game session
+ */
+export const FinishGameSessionParams = zod.object({
+  "sessionId": zod.coerce.string().uuid()
+})
+
+export const finishGameSessionBodyPlayersMin = 2;
+export const finishGameSessionBodyPlayersMax = 8;
+
+
+
+export const FinishGameSessionBody = zod.object({
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})).min(finishGameSessionBodyPlayersMin).max(finishGameSessionBodyPlayersMax)
+})
+
+export const FinishGameSessionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+})
+
+
+/**
+ * @summary Get the best completed scores for a game
+ */
+export const GetGameLeaderboardParams = zod.object({
+  "gameSlug": zod.coerce.string()
+})
+
+export const GetGameLeaderboardResponse = zod.object({
+  "gameSlug": zod.string(),
+  "entries": zod.array(zod.object({
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "score": zod.number().int(),
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int()
+}))
+})
 
 

@@ -22,6 +22,7 @@ export type Game = {
   rules: string[];
   accent: string;
   icon: string;
+  articleMarkdown?: string;
 };
 
 export type InventoryItem = {
@@ -77,6 +78,7 @@ export const games: Game[] = [
     ],
     accent: '#f9be4b',
     icon: '7',
+    articleMarkdown: '## Ready to play?\n\nFlip 7 is a push-your-luck game. **Stay** to bank your points, or *hit* to try for more.\n\n- Keep unique number cards in front of you\n- A duplicate number ends your round\n- Flip seven unique numbers to win instantly',
   },
   {
     slug: 'pickleball',
@@ -100,6 +102,7 @@ export const games: Game[] = [
     ],
     accent: '#42d1b1',
     icon: 'P',
+    articleMarkdown: '## The quick court guide\n\nPickleball is played as singles or doubles. **Serve diagonally**, let the ball bounce on both sides, and keep volleys out of the kitchen.\n\n1. Serve underhand below the waist\n2. Let the serve and return bounce\n3. Win by two points',
   },
   {
     slug: 'poker',
@@ -123,6 +126,7 @@ export const games: Game[] = [
     ],
     accent: '#f6a65b',
     icon: 'A',
+    articleMarkdown: '## Texas hold’em basics\n\nBuild the best five-card hand from your two private cards and five shared cards.\n\n- **Fold** to leave the hand\n- **Call** to match the current bet\n- *Raise* to increase it',
   },
   {
     slug: 'portal',
@@ -146,6 +150,7 @@ export const games: Game[] = [
     ],
     accent: '#88a6ff',
     icon: 'O',
+    articleMarkdown: '## Solve it together\n\nTalk through each possibility before spending an attempt. Mark the route, test one move at a time, and look for patterns on the other side of each portal.',
   },
   {
     slug: 'mafia',
@@ -169,6 +174,7 @@ export const games: Game[] = [
     ],
     accent: '#e98fcb',
     icon: 'M',
+    articleMarkdown: '## Day and night\n\nThe town wins by finding the Mafia. The Mafia wins when they control the vote.\n\n- At night, hidden roles act quietly\n- During the day, everyone debates\n- The town votes to eliminate one player',
   },
 ];
 
