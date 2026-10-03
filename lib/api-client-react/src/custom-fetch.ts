@@ -360,7 +360,15 @@ export async function customFetch<T = unknown>(
 
   const requestInfo = { method, url: resolveUrl(input) };
 
-  const response = await fetch(input, { ...init, method, headers });
+  // API responses can contain user-specific or frequently changing data.
+  // Avoid conditional browser caching: a 304 has no body, but these generated
+  // JSON callers require a complete representation to render the page.
+  const response = await fetch(input, {
+    ...init,
+    method,
+    headers,
+    cache: init.cache ?? "no-store",
+  });
 
   if (!response.ok) {
     const errorData = await parseErrorBody(response, method);
