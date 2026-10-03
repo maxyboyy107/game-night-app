@@ -13,4 +13,6 @@ export interface SessionPlayerInput {
      */
   name: string;
   isYou: boolean;
+  /** @nullable */
+  familyMemberId?: string | null;
 }

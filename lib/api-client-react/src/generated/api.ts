@@ -24,6 +24,10 @@ import type {
   AdminUnlockInput,
   AdminUnlockResponse,
   CatalogState,
+  FamilyMember,
+  FamilyMemberHistory,
+  FamilyMemberInput,
+  FamilyMemberUpdate,
   FavoriteResponse,
   FavoriteUpdate,
   GameSession,
@@ -890,6 +894,260 @@ export const useUpdateProfileAvatar = <TError = ErrorType<void>,
       > => {
       return useMutation(getUpdateProfileAvatarMutationOptions(options));
     }
+
+export const getCreateFamilyMemberUrl = () => {
+
+
+
+
+  return `/api/profile/family-members`
+}
+
+/**
+ * @summary Add a family profile to the signed-in account
+ */
+export const createFamilyMember = async (familyMemberInput: FamilyMemberInput, options?: Parameters<typeof customFetch>[1]): Promise<FamilyMember> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FamilyMember>(getCreateFamilyMemberUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(familyMemberInput)
+  }
+);}
+
+
+
+
+
+export const getCreateFamilyMemberMutationKey = () => ['createFamilyMember'] as const;
+
+export const getCreateFamilyMemberMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFamilyMember>>, TError,CreateFamilyMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createFamilyMember>>, TError,CreateFamilyMemberMutationVariables, TContext> => {
+
+const mutationKey = getCreateFamilyMemberMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createFamilyMember>>, CreateFamilyMemberMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createFamilyMember(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateFamilyMemberMutationResult = NonNullable<Awaited<ReturnType<typeof createFamilyMember>>>
+    export type CreateFamilyMemberMutationBody = BodyType<FamilyMemberInput>
+    export type CreateFamilyMemberMutationError = ErrorType<void>
+    export type CreateFamilyMemberMutationVariables = {data: BodyType<FamilyMemberInput>}
+
+    /**
+ * @summary Add a family profile to the signed-in account
+ */
+export const useCreateFamilyMember = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFamilyMember>>, TError,CreateFamilyMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createFamilyMember>>,
+        TError,
+        CreateFamilyMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateFamilyMemberMutationOptions(options));
+    }
+
+export const getUpdateFamilyMemberUrl = (familyMemberId: string,) => {
+
+
+
+
+  return `/api/profile/family-members/${familyMemberId}`
+}
+
+/**
+ * @summary Rename or archive a family profile owned by the signed-in account
+ */
+export const updateFamilyMember = async (familyMemberId: string,
+    familyMemberUpdate: FamilyMemberUpdate, options?: Parameters<typeof customFetch>[1]): Promise<FamilyMember> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FamilyMember>(getUpdateFamilyMemberUrl(familyMemberId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(familyMemberUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateFamilyMemberMutationKey = () => ['updateFamilyMember'] as const;
+
+export const getUpdateFamilyMemberMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFamilyMember>>, TError,UpdateFamilyMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateFamilyMember>>, TError,UpdateFamilyMemberMutationVariables, TContext> => {
+
+const mutationKey = getUpdateFamilyMemberMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateFamilyMember>>, UpdateFamilyMemberMutationVariables> = (props) => {
+          const {familyMemberId,data} = props ?? {};
+
+          return  updateFamilyMember(familyMemberId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateFamilyMemberMutationResult = NonNullable<Awaited<ReturnType<typeof updateFamilyMember>>>
+    export type UpdateFamilyMemberMutationBody = BodyType<FamilyMemberUpdate>
+    export type UpdateFamilyMemberMutationError = ErrorType<void>
+    export type UpdateFamilyMemberMutationVariables = {familyMemberId: string;data: BodyType<FamilyMemberUpdate>}
+
+    /**
+ * @summary Rename or archive a family profile owned by the signed-in account
+ */
+export const useUpdateFamilyMember = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFamilyMember>>, TError,UpdateFamilyMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateFamilyMember>>,
+        TError,
+        UpdateFamilyMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateFamilyMemberMutationOptions(options));
+    }
+
+export const getGetFamilyMemberHistoryUrl = (familyMemberId: string,) => {
+
+
+
+
+  return `/api/profile/family-members/${familyMemberId}/history`
+}
+
+/**
+ * @summary Get completed games for a family profile owned by the signed-in account
+ */
+export const getFamilyMemberHistory = async (familyMemberId: string, options?: Parameters<typeof customFetch>[1]): Promise<FamilyMemberHistory> => {
+
+  return customFetch<FamilyMemberHistory>(getGetFamilyMemberHistoryUrl(familyMemberId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFamilyMemberHistoryQueryKey = (familyMemberId: string,) => {
+    return [
+    `/api/profile/family-members/${familyMemberId}/history`
+    ] as const;
+    }
+
+
+export const getGetFamilyMemberHistoryQueryOptions = <TData = Awaited<ReturnType<typeof getFamilyMemberHistory>>, TError = ErrorType<void>>(familyMemberId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFamilyMemberHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFamilyMemberHistoryQueryKey(familyMemberId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFamilyMemberHistory>>> = ({ signal }) => getFamilyMemberHistory(familyMemberId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: familyMemberId !== null && familyMemberId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFamilyMemberHistory>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFamilyMemberHistoryQueryResult = NonNullable<Awaited<ReturnType<typeof getFamilyMemberHistory>>>
+export type GetFamilyMemberHistoryQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get completed games for a family profile owned by the signed-in account
+ */
+
+export function useGetFamilyMemberHistory<TData = Awaited<ReturnType<typeof getFamilyMemberHistory>>, TError = ErrorType<void>>(
+ familyMemberId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFamilyMemberHistory>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFamilyMemberHistoryQueryOptions(familyMemberId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getSetGameFavoriteUrl = (gameSlug: string,) => {
 

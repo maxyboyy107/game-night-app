@@ -1,0 +1,1 @@
+- [Family profile identity](family-profiles.md) — family records are account-owned subprofiles with stable IDs; archive them to preserve history.

@@ -215,7 +215,8 @@ export const GetProfileResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -231,7 +232,8 @@ export const GetProfileResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -239,6 +241,12 @@ export const GetProfileResponse = zod.object({
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
   "finishedAt": zod.coerce.date().nullish()
+})),
+  "familyMembers": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
 }))
 })
 
@@ -273,7 +281,8 @@ export const UpdateProfileResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -289,7 +298,8 @@ export const UpdateProfileResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -297,6 +307,12 @@ export const UpdateProfileResponse = zod.object({
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
   "finishedAt": zod.coerce.date().nullish()
+})),
+  "familyMembers": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
 }))
 })
 
@@ -327,7 +343,8 @@ export const UpdateProfileAvatarResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -343,7 +360,93 @@ export const UpdateProfileAvatarResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
+})),
+  "score": zod.number().int(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish()
+})),
+  "familyMembers": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Add a family profile to the signed-in account
+ */
+export const createFamilyMemberBodyNameMax = 32;
+
+
+
+export const CreateFamilyMemberBody = zod.object({
+  "name": zod.string().min(1).max(createFamilyMemberBodyNameMax)
+})
+
+export const CreateFamilyMemberResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Rename or archive a family profile owned by the signed-in account
+ */
+export const UpdateFamilyMemberParams = zod.object({
+  "familyMemberId": zod.coerce.string().uuid()
+})
+
+export const updateFamilyMemberBodyNameMax = 32;
+
+
+
+export const UpdateFamilyMemberBody = zod.object({
+  "name": zod.string().min(1).max(updateFamilyMemberBodyNameMax).optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateFamilyMemberResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get completed games for a family profile owned by the signed-in account
+ */
+export const GetFamilyMemberHistoryParams = zod.object({
+  "familyMemberId": zod.coerce.string().uuid()
+})
+
+export const GetFamilyMemberHistoryResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "stats": zod.object({
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int(),
+  "highScore": zod.number().int()
+}),
+  "recentGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -389,7 +492,8 @@ export const startGameSessionBodyPlayersMax = 8;
 export const StartGameSessionBody = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string().min(1).max(startGameSessionBodyPlayersItemNameMax),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullish()
 })).min(startGameSessionBodyPlayersMin).max(startGameSessionBodyPlayersMax)
 })
 
@@ -400,7 +504,8 @@ export const StartGameSessionResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -425,7 +530,8 @@ export const GetGameSessionResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),
@@ -452,7 +558,8 @@ export const FinishGameSessionBody = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })).min(finishGameSessionBodyPlayersMin).max(finishGameSessionBodyPlayersMax)
 })
 
@@ -463,7 +570,8 @@ export const FinishGameSessionResponse = zod.object({
   "players": zod.array(zod.object({
   "name": zod.string(),
   "score": zod.number().int(),
-  "isYou": zod.boolean()
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable()
 })),
   "score": zod.number().int(),
   "status": zod.enum(['active', 'complete']),

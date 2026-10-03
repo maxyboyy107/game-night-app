@@ -114,12 +114,16 @@ export interface SessionPlayerInput {
      */
   name: string;
   isYou: boolean;
+  /** @nullable */
+  familyMemberId?: string | null;
 }
 
 export interface SessionPlayer {
   name: string;
   score: number;
   isYou: boolean;
+  /** @nullable */
+  familyMemberId: string | null;
 }
 
 export interface GameSessionInput {
@@ -161,6 +165,13 @@ export interface GameSession {
   finishedAt?: string | null;
 }
 
+export interface FamilyMember {
+  id: string;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface ProfileSummary {
   username: string;
   /** @nullable */
@@ -169,6 +180,32 @@ export interface ProfileSummary {
   stats: ProfileStats;
   recentGames: GameSession[];
   bestGames: GameSession[];
+  familyMembers: FamilyMember[];
+}
+
+export interface FamilyMemberInput {
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  name: string;
+}
+
+export interface FamilyMemberUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  name?: string;
+  isActive?: boolean;
+}
+
+export interface FamilyMemberHistory {
+  id: string;
+  name: string;
+  isActive: boolean;
+  stats: ProfileStats;
+  recentGames: GameSession[];
 }
 
 export interface FavoriteUpdate {

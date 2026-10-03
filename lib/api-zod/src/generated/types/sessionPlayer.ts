@@ -10,4 +10,6 @@ export interface SessionPlayer {
   name: string;
   score: number;
   isYou: boolean;
+  /** @nullable */
+  familyMemberId: string | null;
 }

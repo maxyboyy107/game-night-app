@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { FamilyMember } from './familyMember';
 import type { GameSession } from './gameSession';
 import type { ProfileStats } from './profileStats';
 
@@ -16,4 +17,5 @@ export interface ProfileSummary {
   stats: ProfileStats;
   recentGames: GameSession[];
   bestGames: GameSession[];
+  familyMembers: FamilyMember[];
 }

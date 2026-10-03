@@ -7,6 +7,7 @@ export type SessionPlayerScore = {
   name: string;
   score: number;
   isYou: boolean;
+  familyMemberId?: string | null;
 };
 
 export const userProfilesTable = pgTable("user_profiles", {

@@ -197,6 +197,82 @@ paths:
                 $ref: "#/components/schemas/ProfileSummary"
         "401":
           description: Sign-in required
+  /profile/family-members:
+    post:
+      tags: [Community]
+      operationId: createFamilyMember
+      summary: Add a family profile to the signed-in account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FamilyMemberInput"
+      responses:
+        "201":
+          description: Created family member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+        "400":
+          description: Invalid family member name
+        "401":
+          description: Sign-in required
+  /profile/family-members/{familyMemberId}:
+    patch:
+      tags: [Community]
+      operationId: updateFamilyMember
+      summary: Rename or archive a family profile owned by the signed-in account
+      parameters:
+        - name: familyMemberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FamilyMemberUpdate"
+      responses:
+        "200":
+          description: Updated family member
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMember"
+        "400":
+          description: Invalid update
+        "401":
+          description: Sign-in required
+        "404":
+          description: Family member not found
+  /profile/family-members/{familyMemberId}/history:
+    get:
+      tags: [Community]
+      operationId: getFamilyMemberHistory
+      summary: Get completed games for a family profile owned by the signed-in account
+      parameters:
+        - name: familyMemberId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Family member profile and completed game history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FamilyMemberHistory"
+        "401":
+          description: Sign-in required
+        "404":
+          description: Family member not found
   /profile/favorites/{gameSlug}:
     put:
       tags: [Community]
@@ -449,13 +525,15 @@ components:
       properties:
         name: { type: string, minLength: 1, maxLength: 32 }
         isYou: { type: boolean }
+        familyMemberId: { type: ["string", "null"], format: uuid }
     SessionPlayer:
       type: object
-      required: [name, score, isYou]
+      required: [name, score, isYou, familyMemberId]
       properties:
         name: { type: string }
         score: { type: integer }
         isYou: { type: boolean }
+        familyMemberId: { type: ["string", "null"], format: uuid }
     GameSessionInput:
       type: object
       required: [players]
@@ -490,7 +568,7 @@ components:
         finishedAt: { type: [string, "null"], format: date-time }
     ProfileSummary:
       type: object
-      required: [username, favorites, stats, recentGames, bestGames]
+      required: [username, favorites, stats, recentGames, bestGames, familyMembers]
       properties:
         username: { type: string }
         avatarPath: { type: [string, "null"] }
@@ -498,6 +576,34 @@ components:
         stats: { $ref: "#/components/schemas/ProfileStats" }
         recentGames: { type: array, items: { $ref: "#/components/schemas/GameSession" } }
         bestGames: { type: array, items: { $ref: "#/components/schemas/GameSession" } }
+        familyMembers: { type: array, items: { $ref: "#/components/schemas/FamilyMember" } }
+    FamilyMember:
+      type: object
+      required: [id, name, isActive, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    FamilyMemberInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 32 }
+    FamilyMemberUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 32 }
+        isActive: { type: boolean }
+    FamilyMemberHistory:
+      type: object
+      required: [id, name, isActive, stats, recentGames]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        isActive: { type: boolean }
+        stats: { $ref: "#/components/schemas/ProfileStats" }
+        recentGames: { type: array, items: { $ref: "#/components/schemas/GameSession" } }
     FavoriteUpdate:
       type: object
       required: [favorited]

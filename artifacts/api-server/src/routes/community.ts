@@ -1,11 +1,15 @@
-import { and, count, desc, eq, max, sql } from "drizzle-orm";
+import { and, count, desc, eq, inArray, max, sql } from "drizzle-orm";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, catalogStateTable, gameFavoritesTable, gameSessionsTable, userProfilesTable, type SessionPlayerScore } from "@workspace/db";
+import { db, catalogStateTable, familyMembersTable, gameFavoritesTable, gameSessionsTable, userProfilesTable, type SessionPlayerScore } from "@workspace/db";
 import { createSeedCatalog, normalizeCatalog } from "@workspace/catalog";
 import {
+  CreateFamilyMemberBody,
+  CreateFamilyMemberResponse,
   FinishGameSessionBody,
   FinishGameSessionParams,
   FinishGameSessionResponse,
+  GetFamilyMemberHistoryParams,
+  GetFamilyMemberHistoryResponse,
   GetGameLeaderboardParams,
   GetGameLeaderboardResponse,
   GetGameSessionParams,
@@ -17,6 +21,9 @@ import {
   StartGameSessionBody,
   StartGameSessionParams,
   StartGameSessionResponse,
+  UpdateFamilyMemberBody,
+  UpdateFamilyMemberParams,
+  UpdateFamilyMemberResponse,
   UpdateProfileAvatarBody,
   UpdateProfileAvatarResponse,
   UpdateProfileBody,
@@ -60,7 +67,7 @@ async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, title
     id: row.id,
     gameSlug: row.gameSlug,
     gameTitle: titles[row.gameSlug],
-    players: row.players,
+    players: row.players.map((player) => ({ ...player, familyMemberId: player.familyMemberId ?? null })),
     score: row.score,
     status: row.status,
     winnerName: row.winnerName,
@@ -73,6 +80,7 @@ async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, title
 async function buildProfile(userId: string) {
   const profile = await ensureProfile(userId);
   const favorites = await db.select({ gameSlug: gameFavoritesTable.gameSlug }).from(gameFavoritesTable).where(eq(gameFavoritesTable.userId, userId));
+  const familyMembers = await db.select().from(familyMembersTable).where(eq(familyMembersTable.ownerUserId, userId)).orderBy(desc(familyMembersTable.createdAt));
   const sessions = await db.select().from(gameSessionsTable).where(and(eq(gameSessionsTable.userId, userId), eq(gameSessionsTable.status, "complete"))).orderBy(desc(gameSessionsTable.finishedAt));
   const titles = await gameTitles();
   const mapped = await Promise.all(sessions.map((session) => sessionResponse(session, titles)));
@@ -85,20 +93,133 @@ async function buildProfile(userId: string) {
     stats: { gamesPlayed: sessions.length, wins, highScore },
     recentGames: mapped.slice(0, 30),
     bestGames: [...mapped].sort((a, b) => b.score - a.score || new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime()).slice(0, 10),
+    familyMembers: familyMembers.map((member) => ({
+      id: member.id,
+      name: member.name,
+      isActive: member.isActive,
+      createdAt: member.createdAt.toISOString(),
+    })),
   });
 }
 
 function validPlayers(players: SessionPlayerScore[], requireScore: boolean): boolean {
   return players.length >= 2 && players.length <= 8
     && players.filter((player) => player.isYou).length === 1
+    && players.every((player) => !player.isYou || !player.familyMemberId)
+    && new Set(players.map((player) => player.familyMemberId).filter(Boolean)).size === players.filter((player) => player.familyMemberId).length
     && players.every((player) => typeof player.name === "string" && player.name.trim().length > 0 && player.name.trim().length <= 32
       && (!requireScore || Number.isInteger(player.score)));
+}
+
+async function loadOwnedFamilyMembers(userId: string, players: SessionPlayerScore[], requireActive: boolean) {
+  const ids = [...new Set(players.map((player) => player.familyMemberId).filter((id): id is string => Boolean(id)))];
+  if (!ids.length) return new Map<string, typeof familyMembersTable.$inferSelect>();
+  const rows = await db.select().from(familyMembersTable).where(and(
+    eq(familyMembersTable.ownerUserId, userId),
+    inArray(familyMembersTable.id, ids),
+  ));
+  if (rows.length !== ids.length || (requireActive && rows.some((member) => !member.isActive))) return null;
+  return new Map(rows.map((member) => [member.id, member]));
 }
 
 router.get("/profile", async (req, res): Promise<void> => {
   const userId = requireUser(req, res);
   if (!userId) return;
   res.json(await buildProfile(userId));
+});
+
+router.post("/profile/family-members", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  const parsed = CreateFamilyMemberBody.safeParse(req.body);
+  const name = parsed.success ? parsed.data.name.trim() : "";
+  if (!parsed.success || !name || name.length > 32) {
+    res.status(400).json({ error: "Enter a family member name up to 32 characters." });
+    return;
+  }
+  await ensureProfile(userId);
+  const [member] = await db.insert(familyMembersTable).values({ ownerUserId: userId, name }).returning();
+  res.status(201).json(CreateFamilyMemberResponse.parse({
+    id: member.id,
+    name: member.name,
+    isActive: member.isActive,
+    createdAt: member.createdAt.toISOString(),
+  }));
+});
+
+router.patch("/profile/family-members/:familyMemberId", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  const params = UpdateFamilyMemberParams.safeParse(req.params);
+  const parsed = UpdateFamilyMemberBody.safeParse(req.body);
+  if (!params.success || !parsed.success || Object.keys(parsed.data).length === 0) {
+    res.status(400).json({ error: "Provide a valid family member name or active state." });
+    return;
+  }
+  const update: { name?: string; isActive?: boolean; updatedAt: Date } = { updatedAt: new Date() };
+  if (parsed.data.name !== undefined) {
+    const name = parsed.data.name.trim();
+    if (!name || name.length > 32) {
+      res.status(400).json({ error: "Enter a family member name up to 32 characters." });
+      return;
+    }
+    update.name = name;
+  }
+  if (parsed.data.isActive !== undefined) update.isActive = parsed.data.isActive;
+  const [member] = await db.update(familyMembersTable).set(update).where(and(
+    eq(familyMembersTable.id, params.data.familyMemberId),
+    eq(familyMembersTable.ownerUserId, userId),
+  )).returning();
+  if (!member) {
+    res.status(404).json({ error: "Family member not found." });
+    return;
+  }
+  res.json(UpdateFamilyMemberResponse.parse({
+    id: member.id,
+    name: member.name,
+    isActive: member.isActive,
+    createdAt: member.createdAt.toISOString(),
+  }));
+});
+
+router.get("/profile/family-members/:familyMemberId/history", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  const params = GetFamilyMemberHistoryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid family member." });
+    return;
+  }
+  const [member] = await db.select().from(familyMembersTable).where(and(
+    eq(familyMembersTable.id, params.data.familyMemberId),
+    eq(familyMembersTable.ownerUserId, userId),
+  ));
+  if (!member) {
+    res.status(404).json({ error: "Family member not found." });
+    return;
+  }
+  const sessions = await db.select().from(gameSessionsTable).where(and(
+    eq(gameSessionsTable.userId, userId),
+    eq(gameSessionsTable.status, "complete"),
+    sql`${gameSessionsTable.players} @> ${JSON.stringify([{ familyMemberId: member.id }])}::jsonb`,
+  )).orderBy(desc(gameSessionsTable.finishedAt));
+  const titles = await gameTitles();
+  const memberScores = sessions.map((session) => session.players.find((player) => player.familyMemberId === member.id)?.score ?? 0);
+  const wins = sessions.filter((session) => {
+    const memberScore = session.players.find((player) => player.familyMemberId === member.id)?.score;
+    return memberScore !== undefined && memberScore === Math.max(...session.players.map((player) => player.score));
+  }).length;
+  res.json(GetFamilyMemberHistoryResponse.parse({
+    id: member.id,
+    name: member.name,
+    isActive: member.isActive,
+    stats: {
+      gamesPlayed: sessions.length,
+      wins,
+      highScore: memberScores.length ? Math.max(...memberScores) : 0,
+    },
+    recentGames: await Promise.all(sessions.slice(0, 30).map((session) => sessionResponse(session, titles))),
+  }));
 });
 
 router.put("/profile", async (req, res): Promise<void> => {
@@ -170,7 +291,17 @@ router.post("/games/:gameSlug/sessions", async (req, res): Promise<void> => {
     return;
   }
   await ensureProfile(userId);
-  const players = body.data.players.map((player) => ({ ...player, name: player.name.trim(), score: 0 }));
+  const familyMembers = await loadOwnedFamilyMembers(userId, body.data.players.map((player) => ({ ...player, score: 0 })), true);
+  if (!familyMembers) {
+    res.status(400).json({ error: "Choose active family profiles that belong to this account, each only once." });
+    return;
+  }
+  const players = body.data.players.map((player) => ({
+    ...player,
+    name: player.familyMemberId ? familyMembers.get(player.familyMemberId)!.name : player.name.trim(),
+    familyMemberId: player.familyMemberId ?? null,
+    score: 0,
+  }));
   const [session] = await db.insert(gameSessionsTable).values({ userId, gameSlug: params.data.gameSlug, players, status: "active", score: 0, won: false }).returning();
   res.status(201).json(StartGameSessionResponse.parse(await sessionResponse(session, titles)));
 });
@@ -207,6 +338,13 @@ router.patch("/games/sessions/:sessionId", async (req, res): Promise<void> => {
   }
   if (existing.status === "complete") {
     res.json(FinishGameSessionResponse.parse(await sessionResponse(existing, await gameTitles())));
+    return;
+  }
+  if (existing.players.length !== body.data.players.length || body.data.players.some((player, index) => {
+    const original = existing.players[index];
+    return !original || player.isYou !== original.isYou || (player.familyMemberId ?? null) !== (original.familyMemberId ?? null);
+  })) {
+    res.status(400).json({ error: "Player identities cannot be changed after a table starts." });
     return;
   }
   const players = body.data.players.map((player) => ({ ...player, name: player.name.trim() }));
