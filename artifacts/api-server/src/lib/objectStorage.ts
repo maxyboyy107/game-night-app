@@ -49,6 +49,31 @@ export class ObjectStorageService {
     return file;
   }
 
+  async writeJsonBackup(key: string, value: unknown): Promise<void> {
+    const fullPath = this.backupObjectPath(key);
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+    await objectStorageClient.bucket(bucketName).file(objectName).save(JSON.stringify(value), {
+      resumable: false,
+      contentType: "application/json",
+      metadata: { cacheControl: "private, no-store" },
+    });
+  }
+
+  async readJsonBackup<T>(key: string): Promise<T | null> {
+    const fullPath = this.backupObjectPath(key);
+    const { bucketName, objectName } = parseObjectPath(fullPath);
+    const file = objectStorageClient.bucket(bucketName).file(objectName);
+    const [exists] = await file.exists();
+    if (!exists) return null;
+    const [contents] = await file.download();
+    return JSON.parse(contents.toString("utf8")) as T;
+  }
+
+  private backupObjectPath(key: string): string {
+    if (!/^[a-z0-9/_-]+$/.test(key)) throw new Error("Invalid backup key");
+    return `${this.privateDir().replace(/\/$/, "")}/backups/${key}.json`;
+  }
+
   async downloadObject(file: File): Promise<Response> {
     const [metadata] = await file.getMetadata();
     const stream = Readable.toWeb(file.createReadStream()) as ReadableStream;

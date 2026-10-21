@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { ScorekeeperMode } from './scorekeeperMode';
 
 export interface Game {
   slug: string;
@@ -23,4 +24,6 @@ export interface Game {
   accent: string;
   icon: string;
   articleMarkdown?: string;
+  scorekeeperModes?: ScorekeeperMode[];
+  variations?: string[];
 }

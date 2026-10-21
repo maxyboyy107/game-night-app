@@ -6,6 +6,13 @@ export type GameCategory = {
   children?: string[];
 };
 
+export type ScorekeeperMode = {
+  id: string;
+  name: string;
+  strategy: 'points' | 'winner';
+  direction?: 'highest' | 'lowest';
+};
+
 export type Game = {
   slug: string;
   title: string;
@@ -23,6 +30,8 @@ export type Game = {
   accent: string;
   icon: string;
   articleMarkdown?: string;
+  scorekeeperModes?: ScorekeeperMode[];
+  variations?: string[];
 };
 
 export type InventoryItem = {
@@ -198,7 +207,14 @@ export function createSeedCatalog(): CatalogState {
   return {
     categories: clone(categories),
     primaryCategories: [...primaryCategories],
-    games: clone(games),
+    games: clone(games).map((game) => ({
+      ...game,
+      scorekeeperModes: [
+        { id: 'points', name: 'Points game', strategy: 'points', direction: 'highest' },
+        { id: 'winner', name: 'Who won?', strategy: 'winner' },
+      ],
+      variations: [],
+    })),
     inventory: starterInventory(),
   };
 }
@@ -226,6 +242,20 @@ export function normalizeCatalog(value: unknown): CatalogState {
     categorySlugs: Array.isArray(game.categorySlugs) ? game.categorySlugs.filter((category): category is string => typeof category === 'string' && Boolean(safeCategories[category])) : [],
     equipment: Array.isArray(game.equipment) ? game.equipment.filter((item): item is string => typeof item === 'string') : [],
     rules: Array.isArray(game.rules) ? game.rules.filter((rule): rule is string => typeof rule === 'string') : [],
+    scorekeeperModes: Array.isArray(game.scorekeeperModes) && game.scorekeeperModes.length
+      ? game.scorekeeperModes
+        .filter((mode): mode is ScorekeeperMode => Boolean(mode && typeof mode.id === 'string' && typeof mode.name === 'string' && (mode.strategy === 'points' || mode.strategy === 'winner')))
+        .map((mode): ScorekeeperMode => {
+          if (mode.strategy === 'points') {
+            return { id: mode.id, name: mode.name, strategy: mode.strategy, direction: mode.direction === 'lowest' ? 'lowest' : 'highest' };
+          }
+          return { id: mode.id, name: mode.name, strategy: mode.strategy };
+        })
+      : [
+        { id: 'points', name: 'Points game', strategy: 'points' as const, direction: 'highest' as const },
+        { id: 'winner', name: 'Who won?', strategy: 'winner' as const },
+      ],
+    variations: Array.isArray(game.variations) ? game.variations.filter((variation): variation is string => typeof variation === 'string' && variation.trim().length > 0) : [],
   })) : seed.games;
   const safePrimary = Array.isArray(candidate.primaryCategories) ? candidate.primaryCategories.filter((slug): slug is string => typeof slug === 'string' && Boolean(safeCategories[slug])) : seed.primaryCategories.filter((slug) => Boolean(safeCategories[slug]));
   const safeInventory: Record<string, InventoryItem[]> = {};

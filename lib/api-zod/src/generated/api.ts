@@ -20,6 +20,11 @@ export const HealthCheckResponse = zod.object({
 /**
  * @summary Get the shared game catalog
  */
+
+export const getCatalogResponseGamesItemScorekeeperModesItemNameMax = 48;
+
+
+
 export const GetCatalogResponse = zod.object({
   "categories": zod.record(zod.string(), zod.object({
   "slug": zod.string(),
@@ -45,7 +50,14 @@ export const GetCatalogResponse = zod.object({
   "rules": zod.array(zod.string()),
   "accent": zod.string(),
   "icon": zod.string(),
-  "articleMarkdown": zod.string().optional()
+  "articleMarkdown": zod.string().optional(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(getCatalogResponseGamesItemScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner']),
+  "direction": zod.enum(['highest', 'lowest']).optional()
+})).optional(),
+  "variations": zod.array(zod.string()).optional()
 })),
   "inventory": zod.record(zod.string(), zod.array(zod.object({
   "id": zod.string(),
@@ -60,6 +72,11 @@ export const GetCatalogResponse = zod.object({
 /**
  * @summary Save the shared game catalog
  */
+
+export const saveCatalogBodyGamesItemScorekeeperModesItemNameMax = 48;
+
+
+
 export const SaveCatalogBody = zod.object({
   "categories": zod.record(zod.string(), zod.object({
   "slug": zod.string(),
@@ -85,7 +102,14 @@ export const SaveCatalogBody = zod.object({
   "rules": zod.array(zod.string()),
   "accent": zod.string(),
   "icon": zod.string(),
-  "articleMarkdown": zod.string().optional()
+  "articleMarkdown": zod.string().optional(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(saveCatalogBodyGamesItemScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner']),
+  "direction": zod.enum(['highest', 'lowest']).optional()
+})).optional(),
+  "variations": zod.array(zod.string()).optional()
 })),
   "inventory": zod.record(zod.string(), zod.array(zod.object({
   "id": zod.string(),
@@ -95,6 +119,11 @@ export const SaveCatalogBody = zod.object({
   "imagePath": zod.string().nullish()
 })))
 })
+
+
+export const saveCatalogResponseGamesItemScorekeeperModesItemNameMax = 48;
+
+
 
 export const SaveCatalogResponse = zod.object({
   "categories": zod.record(zod.string(), zod.object({
@@ -121,7 +150,174 @@ export const SaveCatalogResponse = zod.object({
   "rules": zod.array(zod.string()),
   "accent": zod.string(),
   "icon": zod.string(),
-  "articleMarkdown": zod.string().optional()
+  "articleMarkdown": zod.string().optional(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(saveCatalogResponseGamesItemScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner']),
+  "direction": zod.enum(['highest', 'lowest']).optional()
+})).optional(),
+  "variations": zod.array(zod.string()).optional()
+})),
+  "inventory": zod.record(zod.string(), zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "imageDataUrl": zod.string().nullish(),
+  "imagePath": zod.string().nullish()
+})))
+})
+
+
+/**
+ * @summary Export the shared catalog for safekeeping
+ */
+
+export const exportCatalogBackupResponseCatalogGamesItemScorekeeperModesItemNameMax = 48;
+
+
+
+export const ExportCatalogBackupResponse = zod.object({
+  "schemaVersion": zod.literal(1),
+  "createdAt": zod.coerce.date(),
+  "catalog": zod.object({
+  "categories": zod.record(zod.string(), zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "color": zod.string(),
+  "children": zod.array(zod.string()).optional()
+})),
+  "primaryCategories": zod.array(zod.string()),
+  "games": zod.array(zod.object({
+  "slug": zod.string(),
+  "title": zod.string(),
+  "alternateNames": zod.array(zod.string()),
+  "categorySlugs": zod.array(zod.string()),
+  "eyebrow": zod.string(),
+  "description": zod.string(),
+  "players": zod.string(),
+  "setup": zod.string(),
+  "age": zod.string(),
+  "duration": zod.string(),
+  "equipment": zod.array(zod.string()),
+  "objective": zod.string(),
+  "rules": zod.array(zod.string()),
+  "accent": zod.string(),
+  "icon": zod.string(),
+  "articleMarkdown": zod.string().optional(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(exportCatalogBackupResponseCatalogGamesItemScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner']),
+  "direction": zod.enum(['highest', 'lowest']).optional()
+})).optional(),
+  "variations": zod.array(zod.string()).optional()
+})),
+  "inventory": zod.record(zod.string(), zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "imageDataUrl": zod.string().nullish(),
+  "imagePath": zod.string().nullish()
+})))
+})
+})
+
+
+/**
+ * @summary Restore the shared catalog from a backup
+ */
+
+export const restoreCatalogBackupBodyCatalogGamesItemScorekeeperModesItemNameMax = 48;
+
+
+
+export const RestoreCatalogBackupBody = zod.object({
+  "schemaVersion": zod.literal(1),
+  "createdAt": zod.coerce.date(),
+  "catalog": zod.object({
+  "categories": zod.record(zod.string(), zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "color": zod.string(),
+  "children": zod.array(zod.string()).optional()
+})),
+  "primaryCategories": zod.array(zod.string()),
+  "games": zod.array(zod.object({
+  "slug": zod.string(),
+  "title": zod.string(),
+  "alternateNames": zod.array(zod.string()),
+  "categorySlugs": zod.array(zod.string()),
+  "eyebrow": zod.string(),
+  "description": zod.string(),
+  "players": zod.string(),
+  "setup": zod.string(),
+  "age": zod.string(),
+  "duration": zod.string(),
+  "equipment": zod.array(zod.string()),
+  "objective": zod.string(),
+  "rules": zod.array(zod.string()),
+  "accent": zod.string(),
+  "icon": zod.string(),
+  "articleMarkdown": zod.string().optional(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(restoreCatalogBackupBodyCatalogGamesItemScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner']),
+  "direction": zod.enum(['highest', 'lowest']).optional()
+})).optional(),
+  "variations": zod.array(zod.string()).optional()
+})),
+  "inventory": zod.record(zod.string(), zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "imageDataUrl": zod.string().nullish(),
+  "imagePath": zod.string().nullish()
+})))
+})
+})
+
+
+export const restoreCatalogBackupResponseGamesItemScorekeeperModesItemNameMax = 48;
+
+
+
+export const RestoreCatalogBackupResponse = zod.object({
+  "categories": zod.record(zod.string(), zod.object({
+  "slug": zod.string(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "color": zod.string(),
+  "children": zod.array(zod.string()).optional()
+})),
+  "primaryCategories": zod.array(zod.string()),
+  "games": zod.array(zod.object({
+  "slug": zod.string(),
+  "title": zod.string(),
+  "alternateNames": zod.array(zod.string()),
+  "categorySlugs": zod.array(zod.string()),
+  "eyebrow": zod.string(),
+  "description": zod.string(),
+  "players": zod.string(),
+  "setup": zod.string(),
+  "age": zod.string(),
+  "duration": zod.string(),
+  "equipment": zod.array(zod.string()),
+  "objective": zod.string(),
+  "rules": zod.array(zod.string()),
+  "accent": zod.string(),
+  "icon": zod.string(),
+  "articleMarkdown": zod.string().optional(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(restoreCatalogBackupResponseGamesItemScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner']),
+  "direction": zod.enum(['highest', 'lowest']).optional()
+})).optional(),
+  "variations": zod.array(zod.string()).optional()
 })),
   "inventory": zod.record(zod.string(), zod.array(zod.object({
   "id": zod.string(),
@@ -214,16 +410,25 @@ export const GetProfileResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })),
   "bestGames": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -231,16 +436,25 @@ export const GetProfileResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })),
   "familyMembers": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -280,16 +494,25 @@ export const UpdateProfileResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })),
   "bestGames": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -297,16 +520,272 @@ export const UpdateProfileResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+})),
+  "familyMembers": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Get all saved games for the signed-in user
+ */
+export const GetProfileGamesResponse = zod.object({
+  "games": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Add a previously played game to the signed-in user's history
+ */
+
+
+export const createHistoricalGameBodyNoteMax = 1000;
+
+export const createHistoricalGameBodyPlayersMin = 2;
+export const createHistoricalGameBodyPlayersMax = 8;
+
+
+
+export const CreateHistoricalGameBody = zod.object({
+  "gameSlug": zod.string().min(1),
+  "modeId": zod.string().min(1),
+  "variation": zod.string().nullish(),
+  "note": zod.string().max(createHistoricalGameBodyNoteMax).nullish(),
+  "playedAt": zod.coerce.date(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})).min(createHistoricalGameBodyPlayersMin).max(createHistoricalGameBodyPlayersMax)
+})
+
+export const CreateHistoricalGameResponse = zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Export the signed-in user's profile, family, and game history
+ */
+export const ExportProfileBackupResponse = zod.object({
+  "schemaVersion": zod.literal(1),
+  "accountId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "username": zod.string(),
+  "avatarPath": zod.string().nullable(),
+  "favorites": zod.array(zod.string()),
+  "familyMembers": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})),
+  "games": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Restore profile data from a backup for the same account
+ */
+export const RestoreProfileBackupBody = zod.object({
+  "schemaVersion": zod.literal(1),
+  "accountId": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "username": zod.string(),
+  "avatarPath": zod.string().nullable(),
+  "favorites": zod.array(zod.string()),
+  "familyMembers": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})),
+  "games": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+}))
+})
+
+export const RestoreProfileBackupResponse = zod.object({
+  "username": zod.string(),
+  "avatarPath": zod.string().nullish(),
+  "favorites": zod.array(zod.string()),
+  "stats": zod.object({
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int(),
+  "highScore": zod.number().int()
+}),
+  "recentGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+})),
+  "bestGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })),
   "familyMembers": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -342,16 +821,25 @@ export const UpdateProfileAvatarResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })),
   "bestGames": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -359,16 +847,25 @@ export const UpdateProfileAvatarResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })),
   "familyMembers": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -444,16 +941,25 @@ export const GetFamilyMemberHistoryResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 }))
 })
 
@@ -482,6 +988,9 @@ export const StartGameSessionParams = zod.object({
   "gameSlug": zod.coerce.string()
 })
 
+
+export const startGameSessionBodyNoteMax = 1000;
+
 export const startGameSessionBodyPlayersItemNameMax = 32;
 
 export const startGameSessionBodyPlayersMin = 2;
@@ -490,6 +999,9 @@ export const startGameSessionBodyPlayersMax = 8;
 
 
 export const StartGameSessionBody = zod.object({
+  "modeId": zod.string().min(1),
+  "variation": zod.string().nullish(),
+  "note": zod.string().max(startGameSessionBodyNoteMax).nullish(),
   "players": zod.array(zod.object({
   "name": zod.string().min(1).max(startGameSessionBodyPlayersItemNameMax),
   "isYou": zod.boolean(),
@@ -503,16 +1015,25 @@ export const StartGameSessionResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })
 
 
@@ -529,16 +1050,25 @@ export const GetGameSessionResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })
 
 
@@ -549,17 +1079,21 @@ export const FinishGameSessionParams = zod.object({
   "sessionId": zod.coerce.string().uuid()
 })
 
+export const finishGameSessionBodyNoteMax = 1000;
+
 export const finishGameSessionBodyPlayersMin = 2;
 export const finishGameSessionBodyPlayersMax = 8;
 
 
 
 export const FinishGameSessionBody = zod.object({
+  "note": zod.string().max(finishGameSessionBodyNoteMax).nullish(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })).min(finishGameSessionBodyPlayersMin).max(finishGameSessionBodyPlayersMax)
 })
 
@@ -569,32 +1103,116 @@ export const FinishGameSessionResponse = zod.object({
   "gameTitle": zod.string().optional(),
   "players": zod.array(zod.object({
   "name": zod.string(),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullable()
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
 })),
-  "score": zod.number().int(),
+  "score": zod.number().int().nullable(),
   "status": zod.enum(['active', 'complete']),
   "winnerName": zod.string().nullish(),
   "won": zod.boolean(),
   "startedAt": zod.coerce.date(),
-  "finishedAt": zod.coerce.date().nullish()
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
 })
+
+
+/**
+ * @summary Edit a completed game in the signed-in user's history
+ */
+export const UpdateGameSessionParams = zod.object({
+  "sessionId": zod.coerce.string().uuid()
+})
+
+
+
+export const updateGameSessionBodyNoteMax = 1000;
+
+export const updateGameSessionBodyPlayersMin = 2;
+export const updateGameSessionBodyPlayersMax = 8;
+
+
+
+export const UpdateGameSessionBody = zod.object({
+  "gameSlug": zod.string().min(1),
+  "modeId": zod.string().min(1),
+  "variation": zod.string().nullish(),
+  "note": zod.string().max(updateGameSessionBodyNoteMax).nullish(),
+  "playedAt": zod.coerce.date(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})).min(updateGameSessionBodyPlayersMin).max(updateGameSessionBodyPlayersMax)
+})
+
+export const UpdateGameSessionResponse = zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete a completed game from the signed-in user's history
+ */
+export const DeleteGameSessionParams = zod.object({
+  "sessionId": zod.coerce.string().uuid()
+})
+
+export const DeleteGameSessionResponse = zod.void()
 
 
 /**
  * @summary Get the best completed scores for a game
  */
 export const GetGameLeaderboardParams = zod.object({
-  "gameSlug": zod.coerce.string()
+  "gameSlug": zod.coerce.string(),
+  "modeId": zod.coerce.string()
 })
 
 export const GetGameLeaderboardResponse = zod.object({
   "gameSlug": zod.string(),
+  "modeId": zod.string(),
+  "strategy": zod.enum(['points', 'winner']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
   "entries": zod.array(zod.object({
+  "id": zod.string(),
   "username": zod.string(),
-  "avatarPath": zod.string().nullish(),
-  "score": zod.number().int(),
+  "avatarPath": zod.string().nullable(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "score": zod.number().int().nullable(),
   "gamesPlayed": zod.number().int(),
   "wins": zod.number().int()
 }))

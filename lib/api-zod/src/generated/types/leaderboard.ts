@@ -6,8 +6,14 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { LeaderboardEntry } from './leaderboardEntry';
+import type { LeaderboardScoreDirection } from './leaderboardScoreDirection';
+import type { LeaderboardStrategy } from './leaderboardStrategy';
 
 export interface Leaderboard {
   gameSlug: string;
+  modeId: string;
+  strategy: LeaderboardStrategy;
+  /** @nullable */
+  scoreDirection: LeaderboardScoreDirection;
   entries: LeaderboardEntry[];
 }

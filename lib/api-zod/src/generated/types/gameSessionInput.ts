@@ -8,6 +8,15 @@
 import type { SessionPlayerInput } from './sessionPlayerInput';
 
 export interface GameSessionInput {
+  /** @minLength 1 */
+  modeId: string;
+  /** @nullable */
+  variation?: string | null;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
   /**
      * @minItems 2
      * @maxItems 8

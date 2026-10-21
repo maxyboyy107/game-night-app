@@ -5,7 +5,10 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GameSessionScoreDirection } from './gameSessionScoreDirection';
+import type { GameSessionSource } from './gameSessionSource';
 import type { GameSessionStatus } from './gameSessionStatus';
+import type { GameSessionStrategy } from './gameSessionStrategy';
 import type { SessionPlayer } from './sessionPlayer';
 
 export interface GameSession {
@@ -13,7 +16,8 @@ export interface GameSession {
   gameSlug: string;
   gameTitle?: string;
   players: SessionPlayer[];
-  score: number;
+  /** @nullable */
+  score: number | null;
   status: GameSessionStatus;
   /** @nullable */
   winnerName?: string | null;
@@ -21,4 +25,15 @@ export interface GameSession {
   startedAt: Date;
   /** @nullable */
   finishedAt?: Date | null;
+  modeId: string;
+  modeName: string;
+  strategy: GameSessionStrategy;
+  /** @nullable */
+  scoreDirection: GameSessionScoreDirection;
+  /** @nullable */
+  variation: string | null;
+  /** @nullable */
+  note: string | null;
+  source: GameSessionSource;
+  playedAt: Date;
 }

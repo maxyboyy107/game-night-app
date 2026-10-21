@@ -7,10 +7,14 @@
  */
 
 export interface LeaderboardEntry {
+  id: string;
   username: string;
   /** @nullable */
-  avatarPath?: string | null;
-  score: number;
+  avatarPath: string | null;
+  /** @nullable */
+  familyMemberId: string | null;
+  /** @nullable */
+  score: number | null;
   gamesPlayed: number;
   wins: number;
 }

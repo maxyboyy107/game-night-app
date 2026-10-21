@@ -9,6 +9,11 @@ import type { SessionPlayer } from './sessionPlayer';
 
 export interface GameSessionFinish {
   /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
+  /**
      * @minItems 2
      * @maxItems 8
      */

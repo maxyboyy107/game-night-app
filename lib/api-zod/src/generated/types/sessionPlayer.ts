@@ -8,8 +8,10 @@
 
 export interface SessionPlayer {
   name: string;
-  score: number;
+  /** @nullable */
+  score: number | null;
   isYou: boolean;
   /** @nullable */
   familyMemberId: string | null;
+  isWinner: boolean;
 }

@@ -17,6 +17,34 @@ export interface GameCategory {
   children?: string[];
 }
 
+export type ScorekeeperModeStrategy = typeof ScorekeeperModeStrategy[keyof typeof ScorekeeperModeStrategy];
+
+
+export const ScorekeeperModeStrategy = {
+  points: 'points',
+  winner: 'winner',
+} as const;
+
+export type ScorekeeperModeDirection = typeof ScorekeeperModeDirection[keyof typeof ScorekeeperModeDirection];
+
+
+export const ScorekeeperModeDirection = {
+  highest: 'highest',
+  lowest: 'lowest',
+} as const;
+
+export interface ScorekeeperMode {
+  /** @minLength 1 */
+  id: string;
+  /**
+     * @minLength 1
+     * @maxLength 48
+     */
+  name: string;
+  strategy: ScorekeeperModeStrategy;
+  direction?: ScorekeeperModeDirection;
+}
+
 export interface Game {
   slug: string;
   title: string;
@@ -34,6 +62,8 @@ export interface Game {
   accent: string;
   icon: string;
   articleMarkdown?: string;
+  scorekeeperModes?: ScorekeeperMode[];
+  variations?: string[];
 }
 
 export interface InventoryItem {
@@ -58,6 +88,21 @@ export interface CatalogState {
 }
 
 export type CatalogInput = CatalogState;
+
+export type CatalogBackupSchemaVersion = typeof CatalogBackupSchemaVersion[keyof typeof CatalogBackupSchemaVersion];
+
+
+export const CatalogBackupSchemaVersion = {
+  NUMBER_1: 1,
+} as const;
+
+export interface CatalogBackup {
+  schemaVersion: CatalogBackupSchemaVersion;
+  createdAt: string;
+  catalog: CatalogState;
+}
+
+export type CatalogBackupInput = CatalogBackup;
 
 export interface AdminUnlockInput {
   /** @minLength 1 */
@@ -120,13 +165,24 @@ export interface SessionPlayerInput {
 
 export interface SessionPlayer {
   name: string;
-  score: number;
+  /** @nullable */
+  score: number | null;
   isYou: boolean;
   /** @nullable */
   familyMemberId: string | null;
+  isWinner: boolean;
 }
 
 export interface GameSessionInput {
+  /** @minLength 1 */
+  modeId: string;
+  /** @nullable */
+  variation?: string | null;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
   /**
      * @minItems 2
      * @maxItems 8
@@ -135,6 +191,51 @@ export interface GameSessionInput {
 }
 
 export interface GameSessionFinish {
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
+  /**
+     * @minItems 2
+     * @maxItems 8
+     */
+  players: SessionPlayer[];
+}
+
+export interface HistoricalGameInput {
+  /** @minLength 1 */
+  gameSlug: string;
+  /** @minLength 1 */
+  modeId: string;
+  /** @nullable */
+  variation?: string | null;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
+  playedAt: string;
+  /**
+     * @minItems 2
+     * @maxItems 8
+     */
+  players: SessionPlayer[];
+}
+
+export interface GameSessionUpdate {
+  /** @minLength 1 */
+  gameSlug: string;
+  /** @minLength 1 */
+  modeId: string;
+  /** @nullable */
+  variation?: string | null;
+  /**
+     * @maxLength 1000
+     * @nullable
+     */
+  note?: string | null;
+  playedAt: string;
   /**
      * @minItems 2
      * @maxItems 8
@@ -150,12 +251,40 @@ export const GameSessionStatus = {
   complete: 'complete',
 } as const;
 
+export type GameSessionStrategy = typeof GameSessionStrategy[keyof typeof GameSessionStrategy];
+
+
+export const GameSessionStrategy = {
+  points: 'points',
+  winner: 'winner',
+} as const;
+
+/**
+ * @nullable
+ */
+export type GameSessionScoreDirection = typeof GameSessionScoreDirection[keyof typeof GameSessionScoreDirection] | null;
+
+
+export const GameSessionScoreDirection = {
+  highest: 'highest',
+  lowest: 'lowest',
+} as const;
+
+export type GameSessionSource = typeof GameSessionSource[keyof typeof GameSessionSource];
+
+
+export const GameSessionSource = {
+  live: 'live',
+  historical: 'historical',
+} as const;
+
 export interface GameSession {
   id: string;
   gameSlug: string;
   gameTitle?: string;
   players: SessionPlayer[];
-  score: number;
+  /** @nullable */
+  score: number | null;
   status: GameSessionStatus;
   /** @nullable */
   winnerName?: string | null;
@@ -163,7 +292,29 @@ export interface GameSession {
   startedAt: string;
   /** @nullable */
   finishedAt?: string | null;
+  modeId: string;
+  modeName: string;
+  strategy: GameSessionStrategy;
+  /** @nullable */
+  scoreDirection: GameSessionScoreDirection;
+  /** @nullable */
+  variation: string | null;
+  /** @nullable */
+  note: string | null;
+  source: GameSessionSource;
+  playedAt: string;
 }
+
+export interface GameSessionList {
+  games: GameSession[];
+}
+
+export type ProfileBackupSchemaVersion = typeof ProfileBackupSchemaVersion[keyof typeof ProfileBackupSchemaVersion];
+
+
+export const ProfileBackupSchemaVersion = {
+  NUMBER_1: 1,
+} as const;
 
 export interface FamilyMember {
   id: string;
@@ -171,6 +322,20 @@ export interface FamilyMember {
   isActive: boolean;
   createdAt: string;
 }
+
+export interface ProfileBackup {
+  schemaVersion: ProfileBackupSchemaVersion;
+  accountId: string;
+  createdAt: string;
+  username: string;
+  /** @nullable */
+  avatarPath: string | null;
+  favorites: string[];
+  familyMembers: FamilyMember[];
+  games: GameSession[];
+}
+
+export type ProfileBackupInput = ProfileBackup;
 
 export interface ProfileSummary {
   username: string;
@@ -218,16 +383,43 @@ export interface FavoriteResponse {
 }
 
 export interface LeaderboardEntry {
+  id: string;
   username: string;
   /** @nullable */
-  avatarPath?: string | null;
-  score: number;
+  avatarPath: string | null;
+  /** @nullable */
+  familyMemberId: string | null;
+  /** @nullable */
+  score: number | null;
   gamesPlayed: number;
   wins: number;
 }
 
+export type LeaderboardStrategy = typeof LeaderboardStrategy[keyof typeof LeaderboardStrategy];
+
+
+export const LeaderboardStrategy = {
+  points: 'points',
+  winner: 'winner',
+} as const;
+
+/**
+ * @nullable
+ */
+export type LeaderboardScoreDirection = typeof LeaderboardScoreDirection[keyof typeof LeaderboardScoreDirection] | null;
+
+
+export const LeaderboardScoreDirection = {
+  highest: 'highest',
+  lowest: 'lowest',
+} as const;
+
 export interface Leaderboard {
   gameSlug: string;
+  modeId: string;
+  strategy: LeaderboardStrategy;
+  /** @nullable */
+  scoreDirection: LeaderboardScoreDirection;
   entries: LeaderboardEntry[];
 }
 

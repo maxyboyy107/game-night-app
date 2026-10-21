@@ -23,6 +23,7 @@ import type {
   AdminStatusResponse,
   AdminUnlockInput,
   AdminUnlockResponse,
+  CatalogBackup,
   CatalogState,
   FamilyMember,
   FamilyMemberHistory,
@@ -33,9 +34,13 @@ import type {
   GameSession,
   GameSessionFinish,
   GameSessionInput,
+  GameSessionList,
+  GameSessionUpdate,
   HealthStatus,
+  HistoricalGameInput,
   Leaderboard,
   ProfileAvatarUpdate,
+  ProfileBackup,
   ProfileSummary,
   ProfileUpdate,
   UploadUrlRequest,
@@ -310,6 +315,171 @@ export const useSaveCatalog = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getSaveCatalogMutationOptions(options));
+    }
+
+export const getExportCatalogBackupUrl = () => {
+
+
+
+
+  return `/api/catalog/backup`
+}
+
+/**
+ * @summary Export the shared catalog for safekeeping
+ */
+export const exportCatalogBackup = async ( options?: Parameters<typeof customFetch>[1]): Promise<CatalogBackup> => {
+
+  return customFetch<CatalogBackup>(getExportCatalogBackupUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getExportCatalogBackupQueryKey = () => {
+    return [
+    `/api/catalog/backup`
+    ] as const;
+    }
+
+
+export const getExportCatalogBackupQueryOptions = <TData = Awaited<ReturnType<typeof exportCatalogBackup>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportCatalogBackup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportCatalogBackupQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportCatalogBackup>>> = ({ signal }) => exportCatalogBackup({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportCatalogBackup>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ExportCatalogBackupQueryResult = NonNullable<Awaited<ReturnType<typeof exportCatalogBackup>>>
+export type ExportCatalogBackupQueryError = ErrorType<void>
+
+
+/**
+ * @summary Export the shared catalog for safekeeping
+ */
+
+export function useExportCatalogBackup<TData = Awaited<ReturnType<typeof exportCatalogBackup>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportCatalogBackup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getExportCatalogBackupQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRestoreCatalogBackupUrl = () => {
+
+
+
+
+  return `/api/catalog/backup`
+}
+
+/**
+ * @summary Restore the shared catalog from a backup
+ */
+export const restoreCatalogBackup = async (catalogBackup: CatalogBackup, options?: Parameters<typeof customFetch>[1]): Promise<CatalogState> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<CatalogState>(getRestoreCatalogBackupUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(catalogBackup)
+  }
+);}
+
+
+
+
+
+export const getRestoreCatalogBackupMutationKey = () => ['restoreCatalogBackup'] as const;
+
+export const getRestoreCatalogBackupMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreCatalogBackup>>, TError,RestoreCatalogBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreCatalogBackup>>, TError,RestoreCatalogBackupMutationVariables, TContext> => {
+
+const mutationKey = getRestoreCatalogBackupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreCatalogBackup>>, RestoreCatalogBackupMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  restoreCatalogBackup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreCatalogBackupMutationResult = NonNullable<Awaited<ReturnType<typeof restoreCatalogBackup>>>
+    export type RestoreCatalogBackupMutationBody = BodyType<CatalogBackup>
+    export type RestoreCatalogBackupMutationError = ErrorType<void>
+    export type RestoreCatalogBackupMutationVariables = {data: BodyType<CatalogBackup>}
+
+    /**
+ * @summary Restore the shared catalog from a backup
+ */
+export const useRestoreCatalogBackup = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreCatalogBackup>>, TError,RestoreCatalogBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreCatalogBackup>>,
+        TError,
+        RestoreCatalogBackupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRestoreCatalogBackupMutationOptions(options));
     }
 
 export const getUnlockCatalogAdminUrl = () => {
@@ -805,6 +975,336 @@ export const useUpdateProfile = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getUpdateProfileMutationOptions(options));
+    }
+
+export const getGetProfileGamesUrl = () => {
+
+
+
+
+  return `/api/profile/games`
+}
+
+/**
+ * @summary Get all saved games for the signed-in user
+ */
+export const getProfileGames = async ( options?: Parameters<typeof customFetch>[1]): Promise<GameSessionList> => {
+
+  return customFetch<GameSessionList>(getGetProfileGamesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfileGamesQueryKey = () => {
+    return [
+    `/api/profile/games`
+    ] as const;
+    }
+
+
+export const getGetProfileGamesQueryOptions = <TData = Awaited<ReturnType<typeof getProfileGames>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfileGames>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfileGamesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfileGames>>> = ({ signal }) => getProfileGames({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfileGames>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProfileGamesQueryResult = NonNullable<Awaited<ReturnType<typeof getProfileGames>>>
+export type GetProfileGamesQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get all saved games for the signed-in user
+ */
+
+export function useGetProfileGames<TData = Awaited<ReturnType<typeof getProfileGames>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfileGames>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProfileGamesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateHistoricalGameUrl = () => {
+
+
+
+
+  return `/api/profile/games`
+}
+
+/**
+ * @summary Add a previously played game to the signed-in user's history
+ */
+export const createHistoricalGame = async (historicalGameInput: HistoricalGameInput, options?: Parameters<typeof customFetch>[1]): Promise<GameSession> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameSession>(getCreateHistoricalGameUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(historicalGameInput)
+  }
+);}
+
+
+
+
+
+export const getCreateHistoricalGameMutationKey = () => ['createHistoricalGame'] as const;
+
+export const getCreateHistoricalGameMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHistoricalGame>>, TError,CreateHistoricalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createHistoricalGame>>, TError,CreateHistoricalGameMutationVariables, TContext> => {
+
+const mutationKey = getCreateHistoricalGameMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createHistoricalGame>>, CreateHistoricalGameMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createHistoricalGame(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateHistoricalGameMutationResult = NonNullable<Awaited<ReturnType<typeof createHistoricalGame>>>
+    export type CreateHistoricalGameMutationBody = BodyType<HistoricalGameInput>
+    export type CreateHistoricalGameMutationError = ErrorType<void>
+    export type CreateHistoricalGameMutationVariables = {data: BodyType<HistoricalGameInput>}
+
+    /**
+ * @summary Add a previously played game to the signed-in user's history
+ */
+export const useCreateHistoricalGame = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createHistoricalGame>>, TError,CreateHistoricalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createHistoricalGame>>,
+        TError,
+        CreateHistoricalGameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateHistoricalGameMutationOptions(options));
+    }
+
+export const getExportProfileBackupUrl = () => {
+
+
+
+
+  return `/api/profile/backup`
+}
+
+/**
+ * @summary Export the signed-in user's profile, family, and game history
+ */
+export const exportProfileBackup = async ( options?: Parameters<typeof customFetch>[1]): Promise<ProfileBackup> => {
+
+  return customFetch<ProfileBackup>(getExportProfileBackupUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getExportProfileBackupQueryKey = () => {
+    return [
+    `/api/profile/backup`
+    ] as const;
+    }
+
+
+export const getExportProfileBackupQueryOptions = <TData = Awaited<ReturnType<typeof exportProfileBackup>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportProfileBackup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportProfileBackupQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportProfileBackup>>> = ({ signal }) => exportProfileBackup({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportProfileBackup>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ExportProfileBackupQueryResult = NonNullable<Awaited<ReturnType<typeof exportProfileBackup>>>
+export type ExportProfileBackupQueryError = ErrorType<void>
+
+
+/**
+ * @summary Export the signed-in user's profile, family, and game history
+ */
+
+export function useExportProfileBackup<TData = Awaited<ReturnType<typeof exportProfileBackup>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportProfileBackup>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getExportProfileBackupQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getRestoreProfileBackupUrl = () => {
+
+
+
+
+  return `/api/profile/backup`
+}
+
+/**
+ * @summary Restore profile data from a backup for the same account
+ */
+export const restoreProfileBackup = async (profileBackup: ProfileBackup, options?: Parameters<typeof customFetch>[1]): Promise<ProfileSummary> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ProfileSummary>(getRestoreProfileBackupUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(profileBackup)
+  }
+);}
+
+
+
+
+
+export const getRestoreProfileBackupMutationKey = () => ['restoreProfileBackup'] as const;
+
+export const getRestoreProfileBackupMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreProfileBackup>>, TError,RestoreProfileBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restoreProfileBackup>>, TError,RestoreProfileBackupMutationVariables, TContext> => {
+
+const mutationKey = getRestoreProfileBackupMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restoreProfileBackup>>, RestoreProfileBackupMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  restoreProfileBackup(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestoreProfileBackupMutationResult = NonNullable<Awaited<ReturnType<typeof restoreProfileBackup>>>
+    export type RestoreProfileBackupMutationBody = BodyType<ProfileBackup>
+    export type RestoreProfileBackupMutationError = ErrorType<void>
+    export type RestoreProfileBackupMutationVariables = {data: BodyType<ProfileBackup>}
+
+    /**
+ * @summary Restore profile data from a backup for the same account
+ */
+export const useRestoreProfileBackup = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restoreProfileBackup>>, TError,RestoreProfileBackupMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restoreProfileBackup>>,
+        TError,
+        RestoreProfileBackupMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRestoreProfileBackupMutationOptions(options));
     }
 
 export const getUpdateProfileAvatarUrl = () => {
@@ -1493,20 +1993,185 @@ export const useFinishGameSession = <TError = ErrorType<void>,
       return useMutation(getFinishGameSessionMutationOptions(options));
     }
 
-export const getGetGameLeaderboardUrl = (gameSlug: string,) => {
+export const getUpdateGameSessionUrl = (sessionId: string,) => {
 
 
 
 
-  return `/api/games/${gameSlug}/leaderboard`
+  return `/api/games/sessions/${sessionId}`
+}
+
+/**
+ * @summary Edit a completed game in the signed-in user's history
+ */
+export const updateGameSession = async (sessionId: string,
+    gameSessionUpdate: GameSessionUpdate, options?: Parameters<typeof customFetch>[1]): Promise<GameSession> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameSession>(getUpdateGameSessionUrl(sessionId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameSessionUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateGameSessionMutationKey = () => ['updateGameSession'] as const;
+
+export const getUpdateGameSessionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameSession>>, TError,UpdateGameSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGameSession>>, TError,UpdateGameSessionMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGameSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGameSession>>, UpdateGameSessionMutationVariables> = (props) => {
+          const {sessionId,data} = props ?? {};
+
+          return  updateGameSession(sessionId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGameSessionMutationResult = NonNullable<Awaited<ReturnType<typeof updateGameSession>>>
+    export type UpdateGameSessionMutationBody = BodyType<GameSessionUpdate>
+    export type UpdateGameSessionMutationError = ErrorType<void>
+    export type UpdateGameSessionMutationVariables = {sessionId: string;data: BodyType<GameSessionUpdate>}
+
+    /**
+ * @summary Edit a completed game in the signed-in user's history
+ */
+export const useUpdateGameSession = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameSession>>, TError,UpdateGameSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGameSession>>,
+        TError,
+        UpdateGameSessionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGameSessionMutationOptions(options));
+    }
+
+export const getDeleteGameSessionUrl = (sessionId: string,) => {
+
+
+
+
+  return `/api/games/sessions/${sessionId}`
+}
+
+/**
+ * @summary Delete a completed game from the signed-in user's history
+ */
+export const deleteGameSession = async (sessionId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteGameSessionUrl(sessionId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGameSessionMutationKey = () => ['deleteGameSession'] as const;
+
+export const getDeleteGameSessionMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGameSession>>, TError,DeleteGameSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGameSession>>, TError,DeleteGameSessionMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGameSessionMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGameSession>>, DeleteGameSessionMutationVariables> = (props) => {
+          const {sessionId} = props ?? {};
+
+          return  deleteGameSession(sessionId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGameSessionMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGameSession>>>
+
+    export type DeleteGameSessionMutationError = ErrorType<void>
+    export type DeleteGameSessionMutationVariables = {sessionId: string}
+
+    /**
+ * @summary Delete a completed game from the signed-in user's history
+ */
+export const useDeleteGameSession = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGameSession>>, TError,DeleteGameSessionMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGameSession>>,
+        TError,
+        DeleteGameSessionMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGameSessionMutationOptions(options));
+    }
+
+export const getGetGameLeaderboardUrl = (gameSlug: string,
+    modeId: string,) => {
+
+
+
+
+  return `/api/games/${gameSlug}/modes/${modeId}/leaderboard`
 }
 
 /**
  * @summary Get the best completed scores for a game
  */
-export const getGameLeaderboard = async (gameSlug: string, options?: Parameters<typeof customFetch>[1]): Promise<Leaderboard> => {
+export const getGameLeaderboard = async (gameSlug: string,
+    modeId: string, options?: Parameters<typeof customFetch>[1]): Promise<Leaderboard> => {
 
-  return customFetch<Leaderboard>(getGetGameLeaderboardUrl(gameSlug),
+  return customFetch<Leaderboard>(getGetGameLeaderboardUrl(gameSlug,modeId),
   {
     ...options,
     method: 'GET'
@@ -1519,29 +2184,31 @@ export const getGameLeaderboard = async (gameSlug: string, options?: Parameters<
 
 
 
-export const getGetGameLeaderboardQueryKey = (gameSlug: string,) => {
+export const getGetGameLeaderboardQueryKey = (gameSlug: string,
+    modeId: string,) => {
     return [
-    `/api/games/${gameSlug}/leaderboard`
+    `/api/games/${gameSlug}/modes/${modeId}/leaderboard`
     ] as const;
     }
 
 
-export const getGetGameLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getGameLeaderboard>>, TError = ErrorType<unknown>>(gameSlug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetGameLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getGameLeaderboard>>, TError = ErrorType<unknown>>(gameSlug: string,
+    modeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetGameLeaderboardQueryKey(gameSlug);
+  const queryKey =  queryOptions?.queryKey ?? getGetGameLeaderboardQueryKey(gameSlug,modeId);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameLeaderboard>>> = ({ signal }) => getGameLeaderboard(gameSlug, { signal, ...requestOptions });
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameLeaderboard>>> = ({ signal }) => getGameLeaderboard(gameSlug,modeId, { signal, ...requestOptions });
 
 
 
 
 
-   return  { queryKey, queryFn, enabled: gameSlug !== null && gameSlug !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGameLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+   return  { queryKey, queryFn, enabled: gameSlug !== null && gameSlug !== undefined && modeId !== null && modeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGameLeaderboard>>, TError, TData> & { queryKey: QueryKey }
 }
 
 export type GetGameLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getGameLeaderboard>>>
@@ -1553,11 +2220,12 @@ export type GetGameLeaderboardQueryError = ErrorType<unknown>
  */
 
 export function useGetGameLeaderboard<TData = Awaited<ReturnType<typeof getGameLeaderboard>>, TError = ErrorType<unknown>>(
- gameSlug: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+ gameSlug: string,
+    modeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
-  const queryOptions = getGetGameLeaderboardQueryOptions(gameSlug,options)
+  const queryOptions = getGetGameLeaderboardQueryOptions(gameSlug,modeId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

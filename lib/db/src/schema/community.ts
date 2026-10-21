@@ -5,9 +5,10 @@ import { z } from "zod/v4";
 
 export type SessionPlayerScore = {
   name: string;
-  score: number;
+  score: number | null;
   isYou: boolean;
   familyMemberId?: string | null;
+  isWinner?: boolean;
 };
 
 export const userProfilesTable = pgTable("user_profiles", {
@@ -41,6 +42,14 @@ export const gameSessionsTable = pgTable("game_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id").notNull(),
   gameSlug: text("game_slug").notNull(),
+  gameTitle: text("game_title"),
+  scorekeeperModeId: text("scorekeeper_mode_id").notNull().default("points"),
+  scorekeeperModeName: text("scorekeeper_mode_name").notNull().default("Points game"),
+  scorekeeperStrategy: text("scorekeeper_strategy").notNull().default("points"),
+  scoreDirection: text("score_direction").notNull().default("highest"),
+  variation: text("variation"),
+  note: text("note"),
+  source: text("source").notNull().default("live"),
   players: jsonb("players").$type<SessionPlayerScore[]>().notNull(),
   score: integer("score").notNull().default(0),
   status: text("status").notNull().default("active"),

@@ -63,6 +63,45 @@ paths:
           description: Sign-in required
         "403":
           description: Admin unlock required
+  /catalog/backup:
+    get:
+      tags: [Catalog]
+      operationId: exportCatalogBackup
+      summary: Export the shared catalog for safekeeping
+      responses:
+        "200":
+          description: Downloadable catalog backup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogBackup"
+        "401":
+          description: Sign-in required
+        "403":
+          description: Admin unlock required
+    put:
+      tags: [Catalog]
+      operationId: restoreCatalogBackup
+      summary: Restore the shared catalog from a backup
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CatalogBackupInput"
+      responses:
+        "200":
+          description: Catalog backup restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CatalogState"
+        "400":
+          description: Invalid backup
+        "401":
+          description: Sign-in required
+        "403":
+          description: Admin unlock required
   /catalog/admin/unlock:
     post:
       tags: [Catalog]
@@ -177,6 +216,78 @@ paths:
           description: Sign-in required
         "409":
           description: Username already in use
+  /profile/games:
+    get:
+      tags: [Community]
+      operationId: getProfileGames
+      summary: Get all saved games for the signed-in user
+      responses:
+        "200":
+          description: Saved game history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSessionList"
+        "401":
+          description: Sign-in required
+    post:
+      tags: [Community]
+      operationId: createHistoricalGame
+      summary: Add a previously played game to the signed-in user's history
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HistoricalGameInput"
+      responses:
+        "201":
+          description: Historical game added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "400":
+          description: Invalid historical game
+        "401":
+          description: Sign-in required
+        "404":
+          description: Game not found
+  /profile/backup:
+    get:
+      tags: [Community]
+      operationId: exportProfileBackup
+      summary: Export the signed-in user's profile, family, and game history
+      responses:
+        "200":
+          description: Downloadable profile backup
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileBackup"
+        "401":
+          description: Sign-in required
+    post:
+      tags: [Community]
+      operationId: restoreProfileBackup
+      summary: Restore profile data from a backup for the same account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileBackupInput"
+      responses:
+        "200":
+          description: Profile backup restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileSummary"
+        "400":
+          description: Invalid backup or account mismatch
+        "401":
+          description: Sign-in required
   /profile/avatar:
     put:
       tags: [Community]
@@ -384,13 +495,66 @@ paths:
           description: Sign-in required
         "404":
           description: Session not found
-  /games/{gameSlug}/leaderboard:
+    put:
+      tags: [Community]
+      operationId: updateGameSession
+      summary: Edit a completed game in the signed-in user's history
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GameSessionUpdate"
+      responses:
+        "200":
+          description: Updated game session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GameSession"
+        "400":
+          description: Invalid game session
+        "401":
+          description: Sign-in required
+        "404":
+          description: Session or game not found
+    delete:
+      tags: [Community]
+      operationId: deleteGameSession
+      summary: Delete a completed game from the signed-in user's history
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Game session deleted
+        "401":
+          description: Sign-in required
+        "404":
+          description: Session not found
+  /games/{gameSlug}/modes/{modeId}/leaderboard:
     get:
       tags: [Community]
       operationId: getGameLeaderboard
       summary: Get the best completed scores for a game
       parameters:
         - name: gameSlug
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: modeId
           in: path
           required: true
           schema:
@@ -422,6 +586,14 @@ components:
         children:
           type: array
           items: { type: string }
+    ScorekeeperMode:
+      type: object
+      required: [id, name, strategy]
+      properties:
+        id: { type: string, minLength: 1 }
+        name: { type: string, minLength: 1, maxLength: 48 }
+        strategy: { type: string, enum: [points, winner] }
+        direction: { type: string, enum: [highest, lowest] }
     Game:
       type: object
       required: [slug, title, alternateNames, categorySlugs, eyebrow, description, players, setup, age, duration, equipment, objective, rules, accent, icon]
@@ -442,6 +614,8 @@ components:
         accent: { type: string }
         icon: { type: string }
         articleMarkdown: { type: string }
+        scorekeeperModes: { type: array, items: { $ref: "#/components/schemas/ScorekeeperMode" } }
+        variations: { type: array, items: { type: string } }
     InventoryItem:
       type: object
       required: [id, name, description]
@@ -468,6 +642,15 @@ components:
             items: { $ref: "#/components/schemas/InventoryItem" }
     CatalogInput:
       $ref: "#/components/schemas/CatalogState"
+    CatalogBackup:
+      type: object
+      required: [schemaVersion, createdAt, catalog]
+      properties:
+        schemaVersion: { type: integer, enum: [1] }
+        createdAt: { type: string, format: date-time }
+        catalog: { $ref: "#/components/schemas/CatalogState" }
+    CatalogBackupInput:
+      $ref: "#/components/schemas/CatalogBackup"
     AdminUnlockInput:
       type: object
       required: [password]
@@ -528,16 +711,20 @@ components:
         familyMemberId: { type: ["string", "null"], format: uuid }
     SessionPlayer:
       type: object
-      required: [name, score, isYou, familyMemberId]
+      required: [name, score, isYou, familyMemberId, isWinner]
       properties:
         name: { type: string }
-        score: { type: integer }
+        score: { type: [integer, "null"] }
         isYou: { type: boolean }
         familyMemberId: { type: ["string", "null"], format: uuid }
+        isWinner: { type: boolean }
     GameSessionInput:
       type: object
-      required: [players]
+      required: [players, modeId]
       properties:
+        modeId: { type: string, minLength: 1 }
+        variation: { type: ["string", "null"] }
+        note: { type: ["string", "null"], maxLength: 1000 }
         players:
           type: array
           minItems: 2
@@ -547,6 +734,35 @@ components:
       type: object
       required: [players]
       properties:
+        note: { type: ["string", "null"], maxLength: 1000 }
+        players:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items: { $ref: "#/components/schemas/SessionPlayer" }
+    HistoricalGameInput:
+      type: object
+      required: [gameSlug, modeId, playedAt, players]
+      properties:
+        gameSlug: { type: string, minLength: 1 }
+        modeId: { type: string, minLength: 1 }
+        variation: { type: ["string", "null"] }
+        note: { type: ["string", "null"], maxLength: 1000 }
+        playedAt: { type: string, format: date-time }
+        players:
+          type: array
+          minItems: 2
+          maxItems: 8
+          items: { $ref: "#/components/schemas/SessionPlayer" }
+    GameSessionUpdate:
+      type: object
+      required: [gameSlug, modeId, playedAt, players]
+      properties:
+        gameSlug: { type: string, minLength: 1 }
+        modeId: { type: string, minLength: 1 }
+        variation: { type: ["string", "null"] }
+        note: { type: ["string", "null"], maxLength: 1000 }
+        playedAt: { type: string, format: date-time }
         players:
           type: array
           minItems: 2
@@ -554,18 +770,45 @@ components:
           items: { $ref: "#/components/schemas/SessionPlayer" }
     GameSession:
       type: object
-      required: [id, gameSlug, players, score, status, won, startedAt]
+      required: [id, gameSlug, players, score, status, won, startedAt, modeId, modeName, strategy, scoreDirection, variation, note, source, playedAt]
       properties:
         id: { type: string, format: uuid }
         gameSlug: { type: string }
         gameTitle: { type: string }
         players: { type: array, items: { $ref: "#/components/schemas/SessionPlayer" } }
-        score: { type: integer }
+        score: { type: [integer, "null"] }
         status: { type: string, enum: [active, complete] }
         winnerName: { type: [string, "null"] }
         won: { type: boolean }
         startedAt: { type: string, format: date-time }
         finishedAt: { type: [string, "null"], format: date-time }
+        modeId: { type: string }
+        modeName: { type: string }
+        strategy: { type: string, enum: [points, winner] }
+        scoreDirection: { type: ["string", "null"], enum: [highest, lowest, null] }
+        variation: { type: ["string", "null"] }
+        note: { type: ["string", "null"] }
+        source: { type: string, enum: [live, historical] }
+        playedAt: { type: string, format: date-time }
+    GameSessionList:
+      type: object
+      required: [games]
+      properties:
+        games: { type: array, items: { $ref: "#/components/schemas/GameSession" } }
+    ProfileBackup:
+      type: object
+      required: [schemaVersion, accountId, createdAt, username, avatarPath, favorites, familyMembers, games]
+      properties:
+        schemaVersion: { type: integer, enum: [1] }
+        accountId: { type: string }
+        createdAt: { type: string, format: date-time }
+        username: { type: string }
+        avatarPath: { type: ["string", "null"] }
+        favorites: { type: array, items: { type: string } }
+        familyMembers: { type: array, items: { $ref: "#/components/schemas/FamilyMember" } }
+        games: { type: array, items: { $ref: "#/components/schemas/GameSession" } }
+    ProfileBackupInput:
+      $ref: "#/components/schemas/ProfileBackup"
     ProfileSummary:
       type: object
       required: [username, favorites, stats, recentGames, bestGames, familyMembers]
@@ -617,17 +860,22 @@ components:
         favorited: { type: boolean }
     LeaderboardEntry:
       type: object
-      required: [username, score, gamesPlayed, wins]
+      required: [id, username, avatarPath, familyMemberId, score, gamesPlayed, wins]
       properties:
+        id: { type: string }
         username: { type: string }
         avatarPath: { type: [string, "null"] }
-        score: { type: integer }
+        familyMemberId: { type: ["string", "null"], format: uuid }
+        score: { type: ["integer", "null"] }
         gamesPlayed: { type: integer }
         wins: { type: integer }
     Leaderboard:
       type: object
-      required: [gameSlug, entries]
+      required: [gameSlug, modeId, strategy, scoreDirection, entries]
       properties:
         gameSlug: { type: string }
+        modeId: { type: string }
+        strategy: { type: string, enum: [points, winner] }
+        scoreDirection: { type: ["string", "null"], enum: [highest, lowest, null] }
         entries: { type: array, items: { $ref: "#/components/schemas/LeaderboardEntry" } }
 
