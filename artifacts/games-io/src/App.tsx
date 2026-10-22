@@ -169,7 +169,7 @@ function AdminSignedOut({ onHome }: { onHome: () => void }) {
 function AppContent() {
   const [location, setLocation] = useLocation();
   const { user } = useUser();
-  const { catalog, saveState: catalogSaveState, retrySave: retryCatalogSave, addCategory, removeCategory, addGame, updateGame, removeGame, addInventoryItem, removeInventoryItem, resetCatalog } = useCatalog();
+  const { catalog, loadState: catalogLoadState, retryLoad: retryCatalogLoad, saveState: catalogSaveState, retrySave: retryCatalogSave, addCategory, removeCategory, addGame, updateGame, removeGame, addInventoryItem, removeInventoryItem, resetCatalog } = useCatalog();
   const [adminOpen, setAdminOpen] = useState(false);
   const [adminUnlocked, setAdminUnlocked] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -236,9 +236,12 @@ function AppContent() {
           : isAdminRoute
             ? <Home catalog={catalog} onCategory={goCategory} onGame={goGame} favorites={favorites} signedIn={Boolean(user)} onFavorite={toggleFavorite} />
             : <NotFound onHome={goHome} />;
-  const adminPanel = user && <AdminPanel categories={catalog.categories} primaryCategories={catalog.primaryCategories} games={catalog.games} inventory={catalog.inventory} catalogSaveState={catalogSaveState} onRetryCatalogSave={retryCatalogSave} unlocked={adminUnlocked} onUnlock={unlockAdmin} onClose={() => { setAdminOpen(false); goHome(); }} onAddCategory={addCategory} onRemoveCategory={removeCategory} onAddGame={addGame} onUpdateGame={updateGame} onRemoveGame={removeGame} onAddInventory={addInventoryItem} onUploadImage={uploadInventoryImage} onRemoveInventory={removeInventoryItem} onReset={resetCatalog} />;
+  const catalogSurface = catalogLoadState === 'loaded' ? content : catalogLoadState === 'loading'
+    ? <div className="mx-auto flex min-h-[65vh] max-w-xl items-center justify-center px-5 text-center text-sm text-[#898997]" role="status">Loading the saved game library…</div>
+    : <div className="mx-auto flex min-h-[65vh] max-w-xl flex-col items-center justify-center px-5 text-center" role="alert"><h1 className="text-2xl font-semibold">The saved game library could not be loaded.</h1><p className="mt-3 text-sm text-[#898997]">Your saved articles were kept safe. Try again before editing the catalog.</p><button onClick={() => void retryCatalogLoad()} className="mt-6 rounded-xl bg-[#f9be4b] px-5 py-3 text-sm font-bold text-[#171821]" data-testid="button-retry-catalog-load">Try again</button></div>;
+  const adminPanel = user && catalogLoadState === 'loaded' && <AdminPanel categories={catalog.categories} primaryCategories={catalog.primaryCategories} games={catalog.games} inventory={catalog.inventory} catalogSaveState={catalogSaveState} onRetryCatalogSave={retryCatalogSave} unlocked={adminUnlocked} onUnlock={unlockAdmin} onClose={() => { setAdminOpen(false); goHome(); }} onAddCategory={addCategory} onRemoveCategory={removeCategory} onAddGame={addGame} onUpdateGame={updateGame} onRemoveGame={removeGame} onAddInventory={addInventoryItem} onUploadImage={uploadInventoryImage} onRemoveInventory={removeInventoryItem} onReset={resetCatalog} />;
   const showingAdminPanel = Boolean(adminPanel && (isAdminRoute || adminOpen));
-  return <Shell onHome={goHome} onAdmin={onAdmin} adminUnlocked={adminUnlocked} hideChrome={showingAdminPanel}>{favoriteNotice && <div role="status" className="mx-auto mt-4 max-w-[1180px] px-5 text-xs text-[#42d1b1]" data-testid="status-favorite-feedback">{favoriteNotice}</div>}{content}{isAdminRoute && adminPanel}{adminOpen && !isAdminRoute && adminPanel}</Shell>;
+  return <Shell onHome={goHome} onAdmin={onAdmin} adminUnlocked={adminUnlocked} hideChrome={showingAdminPanel}>{favoriteNotice && <div role="status" className="mx-auto mt-4 max-w-[1180px] px-5 text-xs text-[#42d1b1]" data-testid="status-favorite-feedback">{favoriteNotice}</div>}{catalogSurface}{isAdminRoute && adminPanel}{adminOpen && !isAdminRoute && adminPanel}</Shell>;
 }
 
 function SignInPage() {

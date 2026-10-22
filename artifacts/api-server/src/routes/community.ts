@@ -1,8 +1,8 @@
 import { createHmac, randomUUID } from "node:crypto";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, catalogStateTable, familyMembersTable, gameFavoritesTable, gameSessionsTable, userProfilesTable, type SessionPlayerScore } from "@workspace/db";
-import { createSeedCatalog, normalizeCatalog, type ScorekeeperMode } from "@workspace/catalog";
+import { db, familyMembersTable, gameFavoritesTable, gameSessionsTable, userProfilesTable, type SessionPlayerScore } from "@workspace/db";
+import type { Game, ScorekeeperMode } from "@workspace/catalog";
 import {
   CreateHistoricalGameBody,
   CreateHistoricalGameResponse,
@@ -10,7 +10,6 @@ import {
   CreateFamilyMemberResponse,
   DeleteGameSessionParams,
   DeleteGameSessionResponse,
-  ExportProfileBackupResponse,
   ExportProfileBackupResponse,
   GetProfileGamesResponse,
   GetGameLeaderboardParams,
@@ -45,6 +44,7 @@ import {
 } from "@workspace/api-zod";
 import { signedInUserId } from "../lib/adminAuth";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { loadCatalogState } from "../lib/catalogPersistence";
 
 const router: IRouter = Router();
 const objectStorage = new ObjectStorageService();
@@ -176,33 +176,44 @@ async function persistProfileBackupSafely(userId: string): Promise<void> {
   }
 }
 
+async function profileBackupHasMissingRecords(userId: string, backup: ProfileBackup): Promise<boolean> {
+  const [members, favorites, sessions] = await Promise.all([
+    db.select({ id: familyMembersTable.id }).from(familyMembersTable).where(eq(familyMembersTable.ownerUserId, userId)),
+    db.select({ gameSlug: gameFavoritesTable.gameSlug }).from(gameFavoritesTable).where(eq(gameFavoritesTable.userId, userId)),
+    db.select({ id: gameSessionsTable.id }).from(gameSessionsTable).where(eq(gameSessionsTable.userId, userId)),
+  ]);
+  const memberIds = new Set(members.map((member) => member.id));
+  const favoriteSlugs = new Set(favorites.map((favorite) => favorite.gameSlug));
+  const sessionIds = new Set(sessions.map((session) => session.id));
+  return backup.familyMembers.some((member) => !memberIds.has(member.id))
+    || backup.favorites.some((slug) => !favoriteSlugs.has(slug))
+    || backup.games.some((game) => !sessionIds.has(game.id));
+}
+
 async function ensureProfile(userId: string) {
   const [existing] = await db.select().from(userProfilesTable).where(eq(userProfilesTable.userId, userId));
-  if (existing) return existing;
   try {
     const backup = await readProfileBackup(userId);
-    if (backup) await restoreProfileBackupData(userId, backup);
+    if (backup && (!existing || await profileBackupHasMissingRecords(userId, backup))) {
+      await restoreProfileBackupData(userId, backup);
+    }
   } catch (error) {
     console.error("Unable to restore the private profile backup.", error);
   }
+  if (existing) return existing;
   await db.insert(userProfilesTable).values({ userId, username: fallbackUsername(userId) }).onConflictDoNothing();
   const [profile] = await db.select().from(userProfilesTable).where(eq(userProfilesTable.userId, userId));
   if (!profile) throw new Error("Unable to load user profile");
   return profile;
 }
 
-async function loadCatalog() {
-  const [row] = await db.select({ data: catalogStateTable.data }).from(catalogStateTable).where(eq(catalogStateTable.id, 1));
-  return normalizeCatalog(row?.data || createSeedCatalog());
-}
-
 async function gameTitles(): Promise<Record<string, string>> {
-  const catalog = await loadCatalog();
+  const catalog = await loadCatalogState();
   return Object.fromEntries(catalog.games.map((game) => [game.slug, game.title]));
 }
 
-async function gameAndMode(gameSlug: string, modeId: string): Promise<{ game: ReturnType<typeof normalizeCatalog>["games"][number]; mode: ScorekeeperMode } | null> {
-  const catalog = await loadCatalog();
+async function gameAndMode(gameSlug: string, modeId: string): Promise<{ game: Game; mode: ScorekeeperMode } | null> {
+  const catalog = await loadCatalogState();
   const game = catalog.games.find((candidate) => candidate.slug === gameSlug);
   const mode = game?.scorekeeperModes?.find((candidate) => candidate.id === modeId);
   return game && mode ? { game, mode } : null;
@@ -211,12 +222,15 @@ async function gameAndMode(gameSlug: string, modeId: string): Promise<{ game: Re
 async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, titles: Record<string, string>) {
   const strategy = row.scorekeeperStrategy === "winner" ? "winner" : "points";
   const scoreDirection = strategy === "winner" ? null : row.scoreDirection === "lowest" ? "lowest" : "highest";
+  const numericScores = row.players.map((player) => player.score).filter((score): score is number => typeof score === "number");
+  const winningScore = scoreDirection === "lowest" ? Math.min(...numericScores) : Math.max(...numericScores);
   const players = row.players.map((player) => ({
     ...player,
     score: strategy === "winner" ? null : player.score ?? 0,
-    isWinner: typeof player.isWinner === "boolean" ? player.isWinner : strategy === "points" && player.score === row.score,
+    isWinner: typeof player.isWinner === "boolean" ? player.isWinner : strategy === "points" && player.score === winningScore,
     familyMemberId: player.familyMemberId ?? null,
   }));
+  const winnerName = row.winnerName || players.filter((player) => player.isWinner).map((player) => player.name).join(" / ") || null;
   const playedAt = row.finishedAt ?? row.startedAt;
   return GetGameSessionResponse.parse({
     id: row.id,
@@ -225,7 +239,7 @@ async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, title
     players,
     score: strategy === "winner" ? null : row.score,
     status: row.status,
-    winnerName: row.winnerName,
+    winnerName,
     won: row.won,
     startedAt: row.startedAt.toISOString(),
     finishedAt: row.finishedAt?.toISOString() ?? null,
@@ -433,6 +447,7 @@ router.post("/profile/games", async (req, res): Promise<void> => {
     startedAt: playedAt,
     finishedAt: playedAt,
   }).returning();
+  await persistProfileBackupSafely(userId);
   res.status(201).json(CreateHistoricalGameResponse.parse(await sessionResponse(session, { [game.slug]: game.title })));
 });
 
@@ -654,6 +669,7 @@ router.post("/games/:gameSlug/sessions", async (req, res): Promise<void> => {
     score: 0,
     won: false,
   }).returning();
+  await persistProfileBackupSafely(userId);
   res.status(201).json(StartGameSessionResponse.parse(await sessionResponse(session, { [game.slug]: game.title })));
 });
 
@@ -721,6 +737,7 @@ router.patch("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     note: body.data.note === undefined ? existing.note : body.data.note?.trim() || null,
     finishedAt: existing.finishedAt || new Date(),
   }).where(eq(gameSessionsTable.id, existing.id)).returning();
+  await persistProfileBackupSafely(userId);
   res.json(FinishGameSessionResponse.parse(await sessionResponse(session, await gameTitles())));
 });
 
@@ -792,6 +809,7 @@ router.put("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     startedAt: playedAt,
     finishedAt: playedAt,
   }).where(eq(gameSessionsTable.id, existing.id)).returning();
+  await persistProfileBackupSafely(userId);
   res.json(UpdateGameSessionResponse.parse(await sessionResponse(session, { [game.slug]: game.title })));
 });
 
@@ -812,6 +830,7 @@ router.delete("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Completed game not found." });
     return;
   }
+  await persistProfileBackupSafely(userId);
   DeleteGameSessionResponse.parse(undefined);
   res.status(204).end();
 });

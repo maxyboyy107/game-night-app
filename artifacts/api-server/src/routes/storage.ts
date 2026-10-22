@@ -37,6 +37,10 @@ router.get("/storage/objects/*path", async (req, res): Promise<void> => {
   try {
     const raw = req.params.path;
     const path = Array.isArray(raw) ? raw.join("/") : raw;
+    if (path.startsWith("backups/")) {
+      res.status(404).json({ error: "Object not found" });
+      return;
+    }
     const file = await objectStorage.getObjectEntityFile(`/objects/${path}`);
     const response = await objectStorage.downloadObject(file);
     res.status(response.status);

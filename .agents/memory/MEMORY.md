@@ -1,2 +1,3 @@
 - [Family profile identity](family-profiles.md) — family records are account-owned subprofiles with stable IDs; archive them to preserve history.
 - [API response caching](api-response-caching.md) — JSON API clients expect full responses; avoid validator-driven empty 304s unless conditional caching is implemented end to end.
+- [Legacy game data recovery](legacy-game-data.md) — past guides and sessions have no known recovery source; don't recreate them without an authoritative backup.

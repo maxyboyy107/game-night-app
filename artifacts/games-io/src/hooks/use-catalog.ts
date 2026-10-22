@@ -5,24 +5,37 @@ import type { Game, GameCategory } from '../data/games';
 
 export function useCatalog() {
   const [catalog, setCatalog] = useState<CatalogState>(() => createSeedCatalog());
+  const [loadState, setLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [saveState, setSaveState] = useState<'saved' | 'saving' | 'error'>('saved');
   const catalogRef = useRef(catalog);
+  const catalogLoaded = useRef(false);
+  const loadVersion = useRef(0);
   const saveTimer = useRef<number | undefined>(undefined);
   const saveVersion = useRef(0);
   const saveQueue = useRef<Promise<void>>(Promise.resolve());
 
-  useEffect(() => {
-    let active = true;
-    void fetch('/api/catalog', { credentials: 'same-origin' })
-      .then((response) => response.ok ? response.json() as Promise<CatalogState> : Promise.reject(new Error('Catalog request failed')))
-      .then((remoteCatalog) => {
-        if (!active) return;
-        catalogRef.current = remoteCatalog;
-        setCatalog(remoteCatalog);
-      })
-      .catch(() => undefined);
-    return () => { active = false; };
+  const loadCatalog = useCallback(async () => {
+    const version = ++loadVersion.current;
+    catalogLoaded.current = false;
+    setLoadState('loading');
+    try {
+      const response = await fetch('/api/catalog', { credentials: 'same-origin', cache: 'no-store' });
+      if (!response.ok) throw new Error('Catalog request failed');
+      const remoteCatalog = await response.json() as CatalogState;
+      if (version !== loadVersion.current) return;
+      catalogRef.current = remoteCatalog;
+      setCatalog(remoteCatalog);
+      catalogLoaded.current = true;
+      setLoadState('loaded');
+    } catch {
+      if (version === loadVersion.current) setLoadState('error');
+    }
   }, []);
+
+  useEffect(() => {
+    void loadCatalog();
+    return () => { loadVersion.current += 1; };
+  }, [loadCatalog]);
 
   const queueSave = useCallback((next: CatalogState) => {
     if (saveTimer.current) window.clearTimeout(saveTimer.current);
@@ -41,6 +54,7 @@ export function useCatalog() {
   }, []);
 
   const update = useCallback((change: (current: CatalogState) => CatalogState) => {
+    if (!catalogLoaded.current) return;
     const next = change(catalogRef.current);
     catalogRef.current = next;
     setCatalog(next);
@@ -83,5 +97,5 @@ export function useCatalog() {
   const addInventoryItem = useCallback((gameSlug: string, item: InventoryItem) => update((current) => ({ ...current, inventory: { ...current.inventory, [gameSlug]: [...(current.inventory[gameSlug] || []), item] } })), [update]);
   const removeInventoryItem = useCallback((gameSlug: string, itemId: string) => update((current) => ({ ...current, inventory: { ...current.inventory, [gameSlug]: (current.inventory[gameSlug] || []).filter((item) => item.id !== itemId) } })), [update]);
 
-  return { catalog, saveState, retrySave, addCategory, removeCategory, addGame, updateGame, removeGame, addInventoryItem, removeInventoryItem, resetCatalog };
+  return { catalog, loadState, retryLoad: loadCatalog, saveState, retrySave, addCategory, removeCategory, addGame, updateGame, removeGame, addInventoryItem, removeInventoryItem, resetCatalog };
 }
