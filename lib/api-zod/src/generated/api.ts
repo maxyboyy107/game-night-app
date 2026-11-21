@@ -23,6 +23,8 @@ export const HealthCheckResponse = zod.object({
 
 export const getCatalogResponseGamesItemScorekeeperModesItemNameMax = 48;
 
+export const getCatalogResponseGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
+
 
 
 export const GetCatalogResponse = zod.object({
@@ -54,8 +56,9 @@ export const GetCatalogResponse = zod.object({
   "scorekeeperModes": zod.array(zod.object({
   "id": zod.string().min(1),
   "name": zod.string().min(1).max(getCatalogResponseGamesItemScorekeeperModesItemNameMax),
-  "strategy": zod.enum(['points', 'winner']),
-  "direction": zod.enum(['highest', 'lowest']).optional()
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(getCatalogResponseGamesItemScorekeeperModesItemTargetScoreMax).optional()
 })).optional(),
   "variations": zod.array(zod.string()).optional()
 })),
@@ -74,6 +77,8 @@ export const GetCatalogResponse = zod.object({
  */
 
 export const saveCatalogBodyGamesItemScorekeeperModesItemNameMax = 48;
+
+export const saveCatalogBodyGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
 
 
 
@@ -106,8 +111,9 @@ export const SaveCatalogBody = zod.object({
   "scorekeeperModes": zod.array(zod.object({
   "id": zod.string().min(1),
   "name": zod.string().min(1).max(saveCatalogBodyGamesItemScorekeeperModesItemNameMax),
-  "strategy": zod.enum(['points', 'winner']),
-  "direction": zod.enum(['highest', 'lowest']).optional()
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(saveCatalogBodyGamesItemScorekeeperModesItemTargetScoreMax).optional()
 })).optional(),
   "variations": zod.array(zod.string()).optional()
 })),
@@ -122,6 +128,8 @@ export const SaveCatalogBody = zod.object({
 
 
 export const saveCatalogResponseGamesItemScorekeeperModesItemNameMax = 48;
+
+export const saveCatalogResponseGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
 
 
 
@@ -154,8 +162,9 @@ export const SaveCatalogResponse = zod.object({
   "scorekeeperModes": zod.array(zod.object({
   "id": zod.string().min(1),
   "name": zod.string().min(1).max(saveCatalogResponseGamesItemScorekeeperModesItemNameMax),
-  "strategy": zod.enum(['points', 'winner']),
-  "direction": zod.enum(['highest', 'lowest']).optional()
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(saveCatalogResponseGamesItemScorekeeperModesItemTargetScoreMax).optional()
 })).optional(),
   "variations": zod.array(zod.string()).optional()
 })),
@@ -174,6 +183,8 @@ export const SaveCatalogResponse = zod.object({
  */
 
 export const exportCatalogBackupResponseCatalogGamesItemScorekeeperModesItemNameMax = 48;
+
+export const exportCatalogBackupResponseCatalogGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
 
 
 
@@ -209,8 +220,9 @@ export const ExportCatalogBackupResponse = zod.object({
   "scorekeeperModes": zod.array(zod.object({
   "id": zod.string().min(1),
   "name": zod.string().min(1).max(exportCatalogBackupResponseCatalogGamesItemScorekeeperModesItemNameMax),
-  "strategy": zod.enum(['points', 'winner']),
-  "direction": zod.enum(['highest', 'lowest']).optional()
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(exportCatalogBackupResponseCatalogGamesItemScorekeeperModesItemTargetScoreMax).optional()
 })).optional(),
   "variations": zod.array(zod.string()).optional()
 })),
@@ -230,6 +242,8 @@ export const ExportCatalogBackupResponse = zod.object({
  */
 
 export const restoreCatalogBackupBodyCatalogGamesItemScorekeeperModesItemNameMax = 48;
+
+export const restoreCatalogBackupBodyCatalogGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
 
 
 
@@ -265,8 +279,9 @@ export const RestoreCatalogBackupBody = zod.object({
   "scorekeeperModes": zod.array(zod.object({
   "id": zod.string().min(1),
   "name": zod.string().min(1).max(restoreCatalogBackupBodyCatalogGamesItemScorekeeperModesItemNameMax),
-  "strategy": zod.enum(['points', 'winner']),
-  "direction": zod.enum(['highest', 'lowest']).optional()
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(restoreCatalogBackupBodyCatalogGamesItemScorekeeperModesItemTargetScoreMax).optional()
 })).optional(),
   "variations": zod.array(zod.string()).optional()
 })),
@@ -282,6 +297,8 @@ export const RestoreCatalogBackupBody = zod.object({
 
 
 export const restoreCatalogBackupResponseGamesItemScorekeeperModesItemNameMax = 48;
+
+export const restoreCatalogBackupResponseGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
 
 
 
@@ -314,8 +331,9 @@ export const RestoreCatalogBackupResponse = zod.object({
   "scorekeeperModes": zod.array(zod.object({
   "id": zod.string().min(1),
   "name": zod.string().min(1).max(restoreCatalogBackupResponseGamesItemScorekeeperModesItemNameMax),
-  "strategy": zod.enum(['points', 'winner']),
-  "direction": zod.enum(['highest', 'lowest']).optional()
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(restoreCatalogBackupResponseGamesItemScorekeeperModesItemTargetScoreMax).optional()
 })).optional(),
   "variations": zod.array(zod.string()).optional()
 })),
@@ -413,6 +431,7 @@ export const GetProfileResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -423,8 +442,11 @@ export const GetProfileResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -439,6 +461,7 @@ export const GetProfileResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -449,8 +472,11 @@ export const GetProfileResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -497,6 +523,7 @@ export const UpdateProfileResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -507,8 +534,11 @@ export const UpdateProfileResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -523,6 +553,7 @@ export const UpdateProfileResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -533,8 +564,11 @@ export const UpdateProfileResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -562,6 +596,7 @@ export const GetProfileGamesResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -572,8 +607,11 @@ export const GetProfileGamesResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -597,6 +635,7 @@ export const createHistoricalGameBodyPlayersMax = 8;
 export const CreateHistoricalGameBody = zod.object({
   "gameSlug": zod.string().min(1),
   "modeId": zod.string().min(1),
+  "gameNightId": zod.string().uuid().nullish(),
   "variation": zod.string().nullish(),
   "note": zod.string().max(createHistoricalGameBodyNoteMax).nullish(),
   "playedAt": zod.coerce.date(),
@@ -605,6 +644,7 @@ export const CreateHistoricalGameBody = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })).min(createHistoricalGameBodyPlayersMin).max(createHistoricalGameBodyPlayersMax)
 })
@@ -618,6 +658,7 @@ export const CreateHistoricalGameResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -628,8 +669,11 @@ export const CreateHistoricalGameResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -662,6 +706,7 @@ export const ExportProfileBackupResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -672,8 +717,11 @@ export const ExportProfileBackupResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -707,6 +755,7 @@ export const RestoreProfileBackupBody = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -717,8 +766,11 @@ export const RestoreProfileBackupBody = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -744,6 +796,7 @@ export const RestoreProfileBackupResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -754,8 +807,11 @@ export const RestoreProfileBackupResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -770,6 +826,7 @@ export const RestoreProfileBackupResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -780,8 +837,11 @@ export const RestoreProfileBackupResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -824,6 +884,7 @@ export const UpdateProfileAvatarResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -834,8 +895,11 @@ export const UpdateProfileAvatarResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -850,6 +914,7 @@ export const UpdateProfileAvatarResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -860,8 +925,11 @@ export const UpdateProfileAvatarResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -944,6 +1012,7 @@ export const GetFamilyMemberHistoryResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -954,8 +1023,11 @@ export const GetFamilyMemberHistoryResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -982,6 +1054,466 @@ export const SetGameFavoriteResponse = zod.object({
 
 
 /**
+ * @summary List this account's Game Nights and invitations
+ */
+export const ListGameNightsResponse = zod.object({
+  "gameNights": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "accessMode": zod.enum(['public', 'invitational', 'private']),
+  "joinCode": zod.string().nullable(),
+  "role": zod.enum(['host', 'member']),
+  "memberCount": zod.number().int()
+})),
+  "invitations": zod.array(zod.object({
+  "membershipId": zod.string().uuid(),
+  "gameNightId": zod.string().uuid(),
+  "gameNightName": zod.string(),
+  "accessMode": zod.enum(['public', 'invitational', 'private']),
+  "hostUsername": zod.string()
+}))
+})
+
+
+/**
+ * @summary Create a persistent Game Night
+ */
+export const createGameNightBodyNameMin = 2;
+export const createGameNightBodyNameMax = 48;
+
+
+
+export const CreateGameNightBody = zod.object({
+  "name": zod.string().min(createGameNightBodyNameMin).max(createGameNightBodyNameMax),
+  "accessMode": zod.enum(['public', 'invitational', 'private'])
+})
+
+export const CreateGameNightResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "accessMode": zod.enum(['public', 'invitational', 'private']),
+  "joinCode": zod.string().nullable(),
+  "role": zod.enum(['host', 'member']),
+  "memberCount": zod.number().int()
+})
+
+
+/**
+ * @summary Join or request access using a Game Night code
+ */
+export const joinGameNightBodyCodeMin = 4;
+export const joinGameNightBodyCodeMax = 4;
+
+
+export const joinGameNightBodyCodeRegExp = new RegExp('^[A-Z]{4}$');
+
+
+export const JoinGameNightBody = zod.object({
+  "code": zod.string().min(joinGameNightBodyCodeMin).max(joinGameNightBodyCodeMax).regex(joinGameNightBodyCodeRegExp)
+})
+
+export const JoinGameNightResponse = zod.object({
+  "status": zod.enum(['joined', 'pending', 'already_member']),
+  "gameNight": zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "accessMode": zod.enum(['public', 'invitational', 'private']),
+  "joinCode": zod.string().nullable(),
+  "role": zod.enum(['host', 'member']),
+  "memberCount": zod.number().int()
+})
+})
+
+
+/**
+ * @summary Get a Game Night, its members, profiles, rules, games, and timeline
+ */
+export const GetGameNightParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid()
+})
+
+export const getGameNightResponseHouseRulesItemRulesTextMax = 6000;
+
+export const getGameNightResponseHouseRulesItemVariationMax = 120;
+
+export const getGameNightResponseHouseRulesItemRulesVersionMax = 24;
+
+
+
+
+export const getGameNightResponseLocalGamesItemScorekeeperModesItemNameMax = 48;
+
+export const getGameNightResponseLocalGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
+
+
+
+export const GetGameNightResponse = zod.object({
+  "night": zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "accessMode": zod.enum(['public', 'invitational', 'private']),
+  "joinCode": zod.string().nullable(),
+  "role": zod.enum(['host', 'member']),
+  "memberCount": zod.number().int()
+}),
+  "members": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "username": zod.string(),
+  "role": zod.enum(['host', 'member']),
+  "status": zod.enum(['active', 'pending', 'invited', 'denied'])
+})),
+  "profiles": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})),
+  "houseRules": zod.array(zod.object({
+  "gameSlug": zod.string(),
+  "rulesText": zod.string().max(getGameNightResponseHouseRulesItemRulesTextMax).nullable(),
+  "variation": zod.string().max(getGameNightResponseHouseRulesItemVariationMax).nullable(),
+  "rulesVersion": zod.string().max(getGameNightResponseHouseRulesItemRulesVersionMax).nullable(),
+  "updatedAt": zod.coerce.date()
+})),
+  "localGames": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "minPlayers": zod.number().int().min(1),
+  "maxPlayers": zod.number().int().min(1),
+  "rules": zod.string(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(getGameNightResponseLocalGamesItemScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(getGameNightResponseLocalGamesItemScorekeeperModesItemTargetScoreMax).optional()
+})),
+  "variations": zod.array(zod.string()),
+  "createdAt": zod.coerce.date()
+})),
+  "timeline": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "gameSlug": zod.string(),
+  "gameTitle": zod.string().optional(),
+  "players": zod.array(zod.object({
+  "name": zod.string(),
+  "score": zod.number().int().nullable(),
+  "isYou": zod.boolean(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
+  "isWinner": zod.boolean()
+})),
+  "score": zod.number().int().nullable(),
+  "status": zod.enum(['active', 'complete']),
+  "winnerName": zod.string().nullish(),
+  "won": zod.boolean(),
+  "startedAt": zod.coerce.date(),
+  "finishedAt": zod.coerce.date().nullish(),
+  "modeId": zod.string(),
+  "modeName": zod.string(),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
+  "variation": zod.string().nullable(),
+  "note": zod.string().nullable(),
+  "source": zod.enum(['live', 'historical']),
+  "playedAt": zod.coerce.date()
+}))
+})
+
+
+/**
+ * @summary Accept, deny, or remove a Game Night member
+ */
+export const UpdateGameNightMembershipParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid(),
+  "membershipId": zod.coerce.string().uuid()
+})
+
+export const UpdateGameNightMembershipBody = zod.object({
+  "action": zod.enum(['accept', 'deny', 'remove'])
+})
+
+export const UpdateGameNightMembershipResponse = zod.object({
+  "id": zod.string().uuid(),
+  "username": zod.string(),
+  "role": zod.enum(['host', 'member']),
+  "status": zod.enum(['active', 'pending', 'invited', 'denied'])
+})
+
+
+/**
+ * @summary Invite an account by username to a private Game Night
+ */
+export const InviteToGameNightParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid()
+})
+
+export const inviteToGameNightBodyUsernameMin = 3;
+export const inviteToGameNightBodyUsernameMax = 20;
+
+
+
+export const InviteToGameNightBody = zod.object({
+  "username": zod.string().min(inviteToGameNightBodyUsernameMin).max(inviteToGameNightBodyUsernameMax)
+})
+
+export const InviteToGameNightResponse = zod.object({
+  "id": zod.string().uuid(),
+  "username": zod.string(),
+  "role": zod.enum(['host', 'member']),
+  "status": zod.enum(['active', 'pending', 'invited', 'denied'])
+})
+
+
+/**
+ * @summary Add a family profile to a Game Night
+ */
+export const CreateGameNightProfileParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid()
+})
+
+export const createGameNightProfileBodyNameMax = 32;
+
+
+
+export const CreateGameNightProfileBody = zod.object({
+  "name": zod.string().min(1).max(createGameNightProfileBodyNameMax)
+})
+
+export const CreateGameNightProfileResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Rename or archive a Game Night family profile
+ */
+export const UpdateGameNightProfileParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid(),
+  "profileId": zod.coerce.string().uuid()
+})
+
+export const updateGameNightProfileBodyNameMax = 32;
+
+
+
+export const UpdateGameNightProfileBody = zod.object({
+  "name": zod.string().min(1).max(updateGameNightProfileBodyNameMax).optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateGameNightProfileResponse = zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "isActive": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Set house rules and an article-specific rules version
+ */
+export const SaveGameNightHouseRulesParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid(),
+  "gameSlug": zod.coerce.string()
+})
+
+export const saveGameNightHouseRulesBodyRulesTextMax = 6000;
+
+export const saveGameNightHouseRulesBodyVariationMax = 120;
+
+export const saveGameNightHouseRulesBodyRulesVersionMax = 24;
+
+
+
+export const SaveGameNightHouseRulesBody = zod.object({
+  "rulesText": zod.string().max(saveGameNightHouseRulesBodyRulesTextMax).nullable(),
+  "variation": zod.string().max(saveGameNightHouseRulesBodyVariationMax).nullable(),
+  "rulesVersion": zod.string().max(saveGameNightHouseRulesBodyRulesVersionMax).nullable()
+})
+
+export const saveGameNightHouseRulesResponseRulesTextMax = 6000;
+
+export const saveGameNightHouseRulesResponseVariationMax = 120;
+
+export const saveGameNightHouseRulesResponseRulesVersionMax = 24;
+
+
+
+export const SaveGameNightHouseRulesResponse = zod.object({
+  "gameSlug": zod.string(),
+  "rulesText": zod.string().max(saveGameNightHouseRulesResponseRulesTextMax).nullable(),
+  "variation": zod.string().max(saveGameNightHouseRulesResponseVariationMax).nullable(),
+  "rulesVersion": zod.string().max(saveGameNightHouseRulesResponseRulesVersionMax).nullable(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Create a Game Night-only local game
+ */
+export const CreateGameNightLocalGameParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid()
+})
+
+export const createGameNightLocalGameBodyTitleMax = 80;
+
+export const createGameNightLocalGameBodyDescriptionMax = 500;
+
+export const createGameNightLocalGameBodyMinPlayersMax = 100;
+
+export const createGameNightLocalGameBodyMaxPlayersMax = 100;
+
+export const createGameNightLocalGameBodyRulesMax = 6000;
+
+
+export const createGameNightLocalGameBodyScorekeeperModesItemNameMax = 48;
+
+export const createGameNightLocalGameBodyScorekeeperModesItemTargetScoreMax = 1000000;
+
+
+export const createGameNightLocalGameBodyVariationsItemMax = 120;
+
+
+
+export const CreateGameNightLocalGameBody = zod.object({
+  "title": zod.string().min(1).max(createGameNightLocalGameBodyTitleMax),
+  "description": zod.string().max(createGameNightLocalGameBodyDescriptionMax),
+  "minPlayers": zod.number().int().min(1).max(createGameNightLocalGameBodyMinPlayersMax),
+  "maxPlayers": zod.number().int().min(1).max(createGameNightLocalGameBodyMaxPlayersMax),
+  "rules": zod.string().max(createGameNightLocalGameBodyRulesMax),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(createGameNightLocalGameBodyScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(createGameNightLocalGameBodyScorekeeperModesItemTargetScoreMax).optional()
+})).min(1),
+  "variations": zod.array(zod.string().max(createGameNightLocalGameBodyVariationsItemMax))
+})
+
+
+
+
+export const createGameNightLocalGameResponseScorekeeperModesItemNameMax = 48;
+
+export const createGameNightLocalGameResponseScorekeeperModesItemTargetScoreMax = 1000000;
+
+
+
+export const CreateGameNightLocalGameResponse = zod.object({
+  "id": zod.string().uuid(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "minPlayers": zod.number().int().min(1),
+  "maxPlayers": zod.number().int().min(1),
+  "rules": zod.string(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(createGameNightLocalGameResponseScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(createGameNightLocalGameResponseScorekeeperModesItemTargetScoreMax).optional()
+})),
+  "variations": zod.array(zod.string()),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Edit a Game Night-only local game
+ */
+export const UpdateGameNightLocalGameParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid(),
+  "localGameId": zod.coerce.string().uuid()
+})
+
+export const updateGameNightLocalGameBodyTitleMax = 80;
+
+export const updateGameNightLocalGameBodyDescriptionMax = 500;
+
+export const updateGameNightLocalGameBodyMinPlayersMax = 100;
+
+export const updateGameNightLocalGameBodyMaxPlayersMax = 100;
+
+export const updateGameNightLocalGameBodyRulesMax = 6000;
+
+
+export const updateGameNightLocalGameBodyScorekeeperModesItemNameMax = 48;
+
+export const updateGameNightLocalGameBodyScorekeeperModesItemTargetScoreMax = 1000000;
+
+
+export const updateGameNightLocalGameBodyVariationsItemMax = 120;
+
+
+
+export const UpdateGameNightLocalGameBody = zod.object({
+  "title": zod.string().min(1).max(updateGameNightLocalGameBodyTitleMax),
+  "description": zod.string().max(updateGameNightLocalGameBodyDescriptionMax),
+  "minPlayers": zod.number().int().min(1).max(updateGameNightLocalGameBodyMinPlayersMax),
+  "maxPlayers": zod.number().int().min(1).max(updateGameNightLocalGameBodyMaxPlayersMax),
+  "rules": zod.string().max(updateGameNightLocalGameBodyRulesMax),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(updateGameNightLocalGameBodyScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(updateGameNightLocalGameBodyScorekeeperModesItemTargetScoreMax).optional()
+})).min(1),
+  "variations": zod.array(zod.string().max(updateGameNightLocalGameBodyVariationsItemMax))
+})
+
+
+
+
+export const updateGameNightLocalGameResponseScorekeeperModesItemNameMax = 48;
+
+export const updateGameNightLocalGameResponseScorekeeperModesItemTargetScoreMax = 1000000;
+
+
+
+export const UpdateGameNightLocalGameResponse = zod.object({
+  "id": zod.string().uuid(),
+  "slug": zod.string(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "minPlayers": zod.number().int().min(1),
+  "maxPlayers": zod.number().int().min(1),
+  "rules": zod.string(),
+  "scorekeeperModes": zod.array(zod.object({
+  "id": zod.string().min(1),
+  "name": zod.string().min(1).max(updateGameNightLocalGameResponseScorekeeperModesItemNameMax),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "direction": zod.enum(['highest', 'lowest']).optional(),
+  "targetScore": zod.number().int().min(1).max(updateGameNightLocalGameResponseScorekeeperModesItemTargetScoreMax).optional()
+})),
+  "variations": zod.array(zod.string()),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove a local game from a Game Night
+ */
+export const DeleteGameNightLocalGameParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid(),
+  "localGameId": zod.coerce.string().uuid()
+})
+
+export const DeleteGameNightLocalGameResponse = zod.void()
+
+
+/**
  * @summary Start and save a game session
  */
 export const StartGameSessionParams = zod.object({
@@ -1000,12 +1532,14 @@ export const startGameSessionBodyPlayersMax = 8;
 
 export const StartGameSessionBody = zod.object({
   "modeId": zod.string().min(1),
+  "gameNightId": zod.string().uuid(),
   "variation": zod.string().nullish(),
   "note": zod.string().max(startGameSessionBodyNoteMax).nullish(),
   "players": zod.array(zod.object({
   "name": zod.string().min(1).max(startGameSessionBodyPlayersItemNameMax),
   "isYou": zod.boolean(),
-  "familyMemberId": zod.string().uuid().nullish()
+  "familyMemberId": zod.string().uuid().nullish(),
+  "gameNightProfileId": zod.string().uuid().nullish()
 })).min(startGameSessionBodyPlayersMin).max(startGameSessionBodyPlayersMax)
 })
 
@@ -1018,6 +1552,7 @@ export const StartGameSessionResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -1028,8 +1563,11 @@ export const StartGameSessionResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -1053,6 +1591,7 @@ export const GetGameSessionResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -1063,8 +1602,11 @@ export const GetGameSessionResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -1093,6 +1635,7 @@ export const FinishGameSessionBody = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })).min(finishGameSessionBodyPlayersMin).max(finishGameSessionBodyPlayersMax)
 })
@@ -1106,6 +1649,7 @@ export const FinishGameSessionResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -1116,8 +1660,11 @@ export const FinishGameSessionResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -1152,6 +1699,7 @@ export const UpdateGameSessionBody = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })).min(updateGameSessionBodyPlayersMin).max(updateGameSessionBodyPlayersMax)
 })
@@ -1165,6 +1713,7 @@ export const UpdateGameSessionResponse = zod.object({
   "score": zod.number().int().nullable(),
   "isYou": zod.boolean(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullish(),
   "isWinner": zod.boolean()
 })),
   "score": zod.number().int().nullable(),
@@ -1175,8 +1724,11 @@ export const UpdateGameSessionResponse = zod.object({
   "finishedAt": zod.coerce.date().nullish(),
   "modeId": zod.string(),
   "modeName": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scorekeeperTarget": zod.number().int().nullish(),
+  "gameNightId": zod.string().uuid().nullish(),
+  "localGameId": zod.string().uuid().nullish(),
   "variation": zod.string().nullable(),
   "note": zod.string().nullable(),
   "source": zod.enum(['live', 'historical']),
@@ -1205,13 +1757,76 @@ export const GetGameLeaderboardParams = zod.object({
 export const GetGameLeaderboardResponse = zod.object({
   "gameSlug": zod.string(),
   "modeId": zod.string(),
-  "strategy": zod.enum(['points', 'winner']),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
   "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scope": zod.enum(['family', 'global']),
+  "gameNightId": zod.string().uuid().nullable(),
   "entries": zod.array(zod.object({
   "id": zod.string(),
   "username": zod.string(),
   "avatarPath": zod.string().nullable(),
   "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullable(),
+  "gameNightName": zod.string().nullable(),
+  "score": zod.number().int().nullable(),
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int()
+}))
+})
+
+
+/**
+ * @summary Get the global family-profile leaderboard
+ */
+export const GetGlobalGameLeaderboardParams = zod.object({
+  "gameSlug": zod.coerce.string(),
+  "modeId": zod.coerce.string()
+})
+
+export const GetGlobalGameLeaderboardResponse = zod.object({
+  "gameSlug": zod.string(),
+  "modeId": zod.string(),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scope": zod.enum(['family', 'global']),
+  "gameNightId": zod.string().uuid().nullable(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "username": zod.string(),
+  "avatarPath": zod.string().nullable(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullable(),
+  "gameNightName": zod.string().nullable(),
+  "score": zod.number().int().nullable(),
+  "gamesPlayed": zod.number().int(),
+  "wins": zod.number().int()
+}))
+})
+
+
+/**
+ * @summary Get the current Game Night family leaderboard
+ */
+export const GetFamilyGameLeaderboardParams = zod.object({
+  "gameSlug": zod.coerce.string(),
+  "modeId": zod.coerce.string(),
+  "gameNightId": zod.coerce.string().uuid()
+})
+
+export const GetFamilyGameLeaderboardResponse = zod.object({
+  "gameSlug": zod.string(),
+  "modeId": zod.string(),
+  "strategy": zod.enum(['points', 'winner', 'first_to']),
+  "scoreDirection": zod.union([zod.literal('highest'),zod.literal('lowest'),zod.literal(null)]).nullable(),
+  "scope": zod.enum(['family', 'global']),
+  "gameNightId": zod.string().uuid().nullable(),
+  "entries": zod.array(zod.object({
+  "id": zod.string(),
+  "username": zod.string(),
+  "avatarPath": zod.string().nullable(),
+  "familyMemberId": zod.string().uuid().nullable(),
+  "gameNightProfileId": zod.string().uuid().nullable(),
+  "gameNightName": zod.string().nullable(),
   "score": zod.number().int().nullable(),
   "gamesPlayed": zod.number().int(),
   "wins": zod.number().int()

@@ -1,10 +1,32 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { saveCatalog } from '@workspace/api-client-react';
-import { createSeedCatalog, slugify, type CatalogState, type InventoryItem } from '../data/catalog';
+import { createSeedCatalog, normalizeCatalog, slugify, type CatalogState, type InventoryItem } from '../data/catalog';
 import type { Game, GameCategory } from '../data/games';
 
+const LOCAL_CATALOG_KEY = 'games-io.catalog-cache.v2';
+
+function readLocalCatalog(): { catalog: CatalogState; source: 'cached' | 'starter' } {
+  try {
+    const serialized = window.localStorage.getItem(LOCAL_CATALOG_KEY);
+    if (serialized) return { catalog: normalizeCatalog(JSON.parse(serialized)), source: 'cached' };
+  } catch {
+    // Storage can be disabled by a browser; the built-in catalog still renders.
+  }
+  return { catalog: createSeedCatalog(), source: 'starter' };
+}
+
+function cacheCatalog(catalog: CatalogState): void {
+  try {
+    window.localStorage.setItem(LOCAL_CATALOG_KEY, JSON.stringify(catalog));
+  } catch {
+    // The server remains the source of truth if local storage is unavailable.
+  }
+}
+
 export function useCatalog() {
-  const [catalog, setCatalog] = useState<CatalogState>(() => createSeedCatalog());
+  const [initialCatalog] = useState(readLocalCatalog);
+  const [catalog, setCatalog] = useState<CatalogState>(initialCatalog.catalog);
+  const [fallbackSource, setFallbackSource] = useState<'cached' | 'starter' | 'remote'>(initialCatalog.source);
   const [loadState, setLoadState] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [saveState, setSaveState] = useState<'saved' | 'saving' | 'error'>('saved');
   const catalogRef = useRef(catalog);
@@ -21,10 +43,12 @@ export function useCatalog() {
     try {
       const response = await fetch('/api/catalog', { credentials: 'same-origin', cache: 'no-store' });
       if (!response.ok) throw new Error('Catalog request failed');
-      const remoteCatalog = await response.json() as CatalogState;
+      const remoteCatalog = normalizeCatalog(await response.json());
       if (version !== loadVersion.current) return;
       catalogRef.current = remoteCatalog;
       setCatalog(remoteCatalog);
+      cacheCatalog(remoteCatalog);
+      setFallbackSource('remote');
       catalogLoaded.current = true;
       setLoadState('loaded');
     } catch {
@@ -45,7 +69,11 @@ export function useCatalog() {
       saveQueue.current = saveQueue.current.catch(() => undefined).then(async () => {
         try {
           await saveCatalog(next);
-          if (version === saveVersion.current) setSaveState('saved');
+          if (version === saveVersion.current) {
+            cacheCatalog(next);
+            setFallbackSource('remote');
+            setSaveState('saved');
+          }
         } catch {
           if (version === saveVersion.current) setSaveState('error');
         }
@@ -97,5 +125,5 @@ export function useCatalog() {
   const addInventoryItem = useCallback((gameSlug: string, item: InventoryItem) => update((current) => ({ ...current, inventory: { ...current.inventory, [gameSlug]: [...(current.inventory[gameSlug] || []), item] } })), [update]);
   const removeInventoryItem = useCallback((gameSlug: string, itemId: string) => update((current) => ({ ...current, inventory: { ...current.inventory, [gameSlug]: (current.inventory[gameSlug] || []).filter((item) => item.id !== itemId) } })), [update]);
 
-  return { catalog, loadState, retryLoad: loadCatalog, saveState, retrySave, addCategory, removeCategory, addGame, updateGame, removeGame, addInventoryItem, removeInventoryItem, resetCatalog };
+  return { catalog, loadState, fallbackSource, retryLoad: loadCatalog, saveState, retrySave, addCategory, removeCategory, addGame, updateGame, removeGame, addInventoryItem, removeInventoryItem, resetCatalog };
 }

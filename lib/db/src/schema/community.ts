@@ -2,12 +2,14 @@ import { sql } from "drizzle-orm";
 import { boolean, integer, jsonb, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
+import { gameNightLocalGamesTable, gameNightsTable } from "./game-nights";
 
 export type SessionPlayerScore = {
   name: string;
   score: number | null;
   isYou: boolean;
   familyMemberId?: string | null;
+  gameNightProfileId?: string | null;
   isWinner?: boolean;
 };
 
@@ -42,11 +44,14 @@ export const gameSessionsTable = pgTable("game_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id").notNull(),
   gameSlug: text("game_slug").notNull(),
+  gameNightId: uuid("game_night_id").references(() => gameNightsTable.id, { onDelete: "set null" }),
+  localGameId: uuid("local_game_id").references(() => gameNightLocalGamesTable.id, { onDelete: "set null" }),
   gameTitle: text("game_title"),
   scorekeeperModeId: text("scorekeeper_mode_id").notNull().default("points"),
   scorekeeperModeName: text("scorekeeper_mode_name").notNull().default("Points game"),
   scorekeeperStrategy: text("scorekeeper_strategy").notNull().default("points"),
   scoreDirection: text("score_direction").notNull().default("highest"),
+  scorekeeperTarget: integer("scorekeeper_target"),
   variation: text("variation"),
   note: text("note"),
   source: text("source").notNull().default("live"),

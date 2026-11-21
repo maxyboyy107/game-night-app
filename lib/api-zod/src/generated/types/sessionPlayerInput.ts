@@ -15,4 +15,6 @@ export interface SessionPlayerInput {
   isYou: boolean;
   /** @nullable */
   familyMemberId?: string | null;
+  /** @nullable */
+  gameNightProfileId?: string | null;
 }

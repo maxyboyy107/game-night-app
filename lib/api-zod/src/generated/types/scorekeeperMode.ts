@@ -18,4 +18,9 @@ export interface ScorekeeperMode {
   name: string;
   strategy: ScorekeeperModeStrategy;
   direction?: ScorekeeperModeDirection;
+  /**
+     * @minimum 1
+     * @maximum 1000000
+     */
+  targetScore?: number;
 }

@@ -12,4 +12,5 @@ export type ScorekeeperModeStrategy = typeof ScorekeeperModeStrategy[keyof typeo
 export const ScorekeeperModeStrategy = {
   points: 'points',
   winner: 'winner',
+  first_to: 'first_to',
 } as const;

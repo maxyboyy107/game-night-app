@@ -10,6 +10,7 @@ import type { SessionPlayerInput } from './sessionPlayerInput';
 export interface GameSessionInput {
   /** @minLength 1 */
   modeId: string;
+  gameNightId: string;
   /** @nullable */
   variation?: string | null;
   /**

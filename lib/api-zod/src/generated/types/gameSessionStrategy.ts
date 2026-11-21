@@ -12,4 +12,5 @@ export type GameSessionStrategy = typeof GameSessionStrategy[keyof typeof GameSe
 export const GameSessionStrategy = {
   points: 'points',
   winner: 'winner',
+  first_to: 'first_to',
 } as const;

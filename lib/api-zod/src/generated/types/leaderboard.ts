@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { LeaderboardEntry } from './leaderboardEntry';
+import type { LeaderboardScope } from './leaderboardScope';
 import type { LeaderboardScoreDirection } from './leaderboardScoreDirection';
 import type { LeaderboardStrategy } from './leaderboardStrategy';
 
@@ -15,5 +16,8 @@ export interface Leaderboard {
   strategy: LeaderboardStrategy;
   /** @nullable */
   scoreDirection: LeaderboardScoreDirection;
+  scope: LeaderboardScope;
+  /** @nullable */
+  gameNightId: string | null;
   entries: LeaderboardEntry[];
 }

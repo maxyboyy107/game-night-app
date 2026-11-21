@@ -5,16 +5,202 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
+export type GameNightCreateInputAccessMode = typeof GameNightCreateInputAccessMode[keyof typeof GameNightCreateInputAccessMode];
+
+
+export const GameNightCreateInputAccessMode = {
+  public: 'public',
+  invitational: 'invitational',
+  private: 'private',
+} as const;
+
+export interface GameNightCreateInput {
+  /**
+     * @minLength 2
+     * @maxLength 48
+     */
+  name: string;
+  accessMode: GameNightCreateInputAccessMode;
 }
 
-export interface GameCategory {
-  slug: string;
+export interface GameNightJoinInput {
+  /**
+     * @minLength 4
+     * @maxLength 4
+     * @pattern ^[A-Z]{4}$
+     */
+  code: string;
+}
+
+export type GameNightSummaryAccessMode = typeof GameNightSummaryAccessMode[keyof typeof GameNightSummaryAccessMode];
+
+
+export const GameNightSummaryAccessMode = {
+  public: 'public',
+  invitational: 'invitational',
+  private: 'private',
+} as const;
+
+export type GameNightSummaryRole = typeof GameNightSummaryRole[keyof typeof GameNightSummaryRole];
+
+
+export const GameNightSummaryRole = {
+  host: 'host',
+  member: 'member',
+} as const;
+
+export interface GameNightSummary {
+  id: string;
   name: string;
-  description: string;
-  color: string;
-  children?: string[];
+  accessMode: GameNightSummaryAccessMode;
+  /** @nullable */
+  joinCode: string | null;
+  role: GameNightSummaryRole;
+  memberCount: number;
+}
+
+export type GameNightInvitationAccessMode = typeof GameNightInvitationAccessMode[keyof typeof GameNightInvitationAccessMode];
+
+
+export const GameNightInvitationAccessMode = {
+  public: 'public',
+  invitational: 'invitational',
+  private: 'private',
+} as const;
+
+export interface GameNightInvitation {
+  membershipId: string;
+  gameNightId: string;
+  gameNightName: string;
+  accessMode: GameNightInvitationAccessMode;
+  hostUsername: string;
+}
+
+export interface GameNightList {
+  gameNights: GameNightSummary[];
+  invitations: GameNightInvitation[];
+}
+
+export type GameNightJoinResponseStatus = typeof GameNightJoinResponseStatus[keyof typeof GameNightJoinResponseStatus];
+
+
+export const GameNightJoinResponseStatus = {
+  joined: 'joined',
+  pending: 'pending',
+  already_member: 'already_member',
+} as const;
+
+export interface GameNightJoinResponse {
+  status: GameNightJoinResponseStatus;
+  gameNight: GameNightSummary;
+}
+
+export type GameNightMemberRole = typeof GameNightMemberRole[keyof typeof GameNightMemberRole];
+
+
+export const GameNightMemberRole = {
+  host: 'host',
+  member: 'member',
+} as const;
+
+export type GameNightMemberStatus = typeof GameNightMemberStatus[keyof typeof GameNightMemberStatus];
+
+
+export const GameNightMemberStatus = {
+  active: 'active',
+  pending: 'pending',
+  invited: 'invited',
+  denied: 'denied',
+} as const;
+
+export interface GameNightMember {
+  id: string;
+  username: string;
+  role: GameNightMemberRole;
+  status: GameNightMemberStatus;
+}
+
+export type GameNightMembershipActionAction = typeof GameNightMembershipActionAction[keyof typeof GameNightMembershipActionAction];
+
+
+export const GameNightMembershipActionAction = {
+  accept: 'accept',
+  deny: 'deny',
+  remove: 'remove',
+} as const;
+
+export interface GameNightMembershipAction {
+  action: GameNightMembershipActionAction;
+}
+
+export interface GameNightInviteInput {
+  /**
+     * @minLength 3
+     * @maxLength 20
+     */
+  username: string;
+}
+
+export interface GameNightProfile {
+  id: string;
+  name: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface GameNightProfileInput {
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  name: string;
+}
+
+export interface GameNightProfileUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 32
+     */
+  name?: string;
+  isActive?: boolean;
+}
+
+export interface GameNightHouseRules {
+  gameSlug: string;
+  /**
+     * @maxLength 6000
+     * @nullable
+     */
+  rulesText: string | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  variation: string | null;
+  /**
+     * @maxLength 24
+     * @nullable
+     */
+  rulesVersion: string | null;
+  updatedAt: string;
+}
+
+export interface GameNightHouseRulesInput {
+  /**
+     * @maxLength 6000
+     * @nullable
+     */
+  rulesText: string | null;
+  /**
+     * @maxLength 120
+     * @nullable
+     */
+  variation: string | null;
+  /**
+     * @maxLength 24
+     * @nullable
+     */
+  rulesVersion: string | null;
 }
 
 export type ScorekeeperModeStrategy = typeof ScorekeeperModeStrategy[keyof typeof ScorekeeperModeStrategy];
@@ -23,6 +209,7 @@ export type ScorekeeperModeStrategy = typeof ScorekeeperModeStrategy[keyof typeo
 export const ScorekeeperModeStrategy = {
   points: 'points',
   winner: 'winner',
+  first_to: 'first_to',
 } as const;
 
 export type ScorekeeperModeDirection = typeof ScorekeeperModeDirection[keyof typeof ScorekeeperModeDirection];
@@ -43,6 +230,154 @@ export interface ScorekeeperMode {
   name: string;
   strategy: ScorekeeperModeStrategy;
   direction?: ScorekeeperModeDirection;
+  /**
+     * @minimum 1
+     * @maximum 1000000
+     */
+  targetScore?: number;
+}
+
+export interface GameNightLocalGame {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  /** @minimum 1 */
+  minPlayers: number;
+  /** @minimum 1 */
+  maxPlayers: number;
+  rules: string;
+  scorekeeperModes: ScorekeeperMode[];
+  variations: string[];
+  createdAt: string;
+}
+
+export interface GameNightLocalGameInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  title: string;
+  /** @maxLength 500 */
+  description: string;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  minPlayers: number;
+  /**
+     * @minimum 1
+     * @maximum 100
+     */
+  maxPlayers: number;
+  /** @maxLength 6000 */
+  rules: string;
+  /** @minItems 1 */
+  scorekeeperModes: ScorekeeperMode[];
+  /** @items.maxLength 120 */
+  variations: string[];
+}
+
+export interface SessionPlayer {
+  name: string;
+  /** @nullable */
+  score: number | null;
+  isYou: boolean;
+  /** @nullable */
+  familyMemberId: string | null;
+  /** @nullable */
+  gameNightProfileId?: string | null;
+  isWinner: boolean;
+}
+
+export type GameSessionStatus = typeof GameSessionStatus[keyof typeof GameSessionStatus];
+
+
+export const GameSessionStatus = {
+  active: 'active',
+  complete: 'complete',
+} as const;
+
+export type GameSessionStrategy = typeof GameSessionStrategy[keyof typeof GameSessionStrategy];
+
+
+export const GameSessionStrategy = {
+  points: 'points',
+  winner: 'winner',
+  first_to: 'first_to',
+} as const;
+
+/**
+ * @nullable
+ */
+export type GameSessionScoreDirection = typeof GameSessionScoreDirection[keyof typeof GameSessionScoreDirection] | null;
+
+
+export const GameSessionScoreDirection = {
+  highest: 'highest',
+  lowest: 'lowest',
+} as const;
+
+export type GameSessionSource = typeof GameSessionSource[keyof typeof GameSessionSource];
+
+
+export const GameSessionSource = {
+  live: 'live',
+  historical: 'historical',
+} as const;
+
+export interface GameSession {
+  id: string;
+  gameSlug: string;
+  gameTitle?: string;
+  players: SessionPlayer[];
+  /** @nullable */
+  score: number | null;
+  status: GameSessionStatus;
+  /** @nullable */
+  winnerName?: string | null;
+  won: boolean;
+  startedAt: string;
+  /** @nullable */
+  finishedAt?: string | null;
+  modeId: string;
+  modeName: string;
+  strategy: GameSessionStrategy;
+  /** @nullable */
+  scoreDirection: GameSessionScoreDirection;
+  /** @nullable */
+  scorekeeperTarget?: number | null;
+  /** @nullable */
+  gameNightId?: string | null;
+  /** @nullable */
+  localGameId?: string | null;
+  /** @nullable */
+  variation: string | null;
+  /** @nullable */
+  note: string | null;
+  source: GameSessionSource;
+  playedAt: string;
+}
+
+export interface GameNightDetail {
+  night: GameNightSummary;
+  members: GameNightMember[];
+  profiles: GameNightProfile[];
+  houseRules: GameNightHouseRules[];
+  localGames: GameNightLocalGame[];
+  timeline: GameSession[];
+}
+
+export interface HealthStatus {
+  status: string;
+}
+
+export interface GameCategory {
+  slug: string;
+  name: string;
+  description: string;
+  color: string;
+  children?: string[];
 }
 
 export interface Game {
@@ -161,21 +496,14 @@ export interface SessionPlayerInput {
   isYou: boolean;
   /** @nullable */
   familyMemberId?: string | null;
-}
-
-export interface SessionPlayer {
-  name: string;
   /** @nullable */
-  score: number | null;
-  isYou: boolean;
-  /** @nullable */
-  familyMemberId: string | null;
-  isWinner: boolean;
+  gameNightProfileId?: string | null;
 }
 
 export interface GameSessionInput {
   /** @minLength 1 */
   modeId: string;
+  gameNightId: string;
   /** @nullable */
   variation?: string | null;
   /**
@@ -209,6 +537,8 @@ export interface HistoricalGameInput {
   /** @minLength 1 */
   modeId: string;
   /** @nullable */
+  gameNightId?: string | null;
+  /** @nullable */
   variation?: string | null;
   /**
      * @maxLength 1000
@@ -241,68 +571,6 @@ export interface GameSessionUpdate {
      * @maxItems 8
      */
   players: SessionPlayer[];
-}
-
-export type GameSessionStatus = typeof GameSessionStatus[keyof typeof GameSessionStatus];
-
-
-export const GameSessionStatus = {
-  active: 'active',
-  complete: 'complete',
-} as const;
-
-export type GameSessionStrategy = typeof GameSessionStrategy[keyof typeof GameSessionStrategy];
-
-
-export const GameSessionStrategy = {
-  points: 'points',
-  winner: 'winner',
-} as const;
-
-/**
- * @nullable
- */
-export type GameSessionScoreDirection = typeof GameSessionScoreDirection[keyof typeof GameSessionScoreDirection] | null;
-
-
-export const GameSessionScoreDirection = {
-  highest: 'highest',
-  lowest: 'lowest',
-} as const;
-
-export type GameSessionSource = typeof GameSessionSource[keyof typeof GameSessionSource];
-
-
-export const GameSessionSource = {
-  live: 'live',
-  historical: 'historical',
-} as const;
-
-export interface GameSession {
-  id: string;
-  gameSlug: string;
-  gameTitle?: string;
-  players: SessionPlayer[];
-  /** @nullable */
-  score: number | null;
-  status: GameSessionStatus;
-  /** @nullable */
-  winnerName?: string | null;
-  won: boolean;
-  startedAt: string;
-  /** @nullable */
-  finishedAt?: string | null;
-  modeId: string;
-  modeName: string;
-  strategy: GameSessionStrategy;
-  /** @nullable */
-  scoreDirection: GameSessionScoreDirection;
-  /** @nullable */
-  variation: string | null;
-  /** @nullable */
-  note: string | null;
-  source: GameSessionSource;
-  playedAt: string;
 }
 
 export interface GameSessionList {
@@ -390,6 +658,10 @@ export interface LeaderboardEntry {
   /** @nullable */
   familyMemberId: string | null;
   /** @nullable */
+  gameNightProfileId: string | null;
+  /** @nullable */
+  gameNightName: string | null;
+  /** @nullable */
   score: number | null;
   gamesPlayed: number;
   wins: number;
@@ -401,6 +673,7 @@ export type LeaderboardStrategy = typeof LeaderboardStrategy[keyof typeof Leader
 export const LeaderboardStrategy = {
   points: 'points',
   winner: 'winner',
+  first_to: 'first_to',
 } as const;
 
 /**
@@ -414,12 +687,23 @@ export const LeaderboardScoreDirection = {
   lowest: 'lowest',
 } as const;
 
+export type LeaderboardScope = typeof LeaderboardScope[keyof typeof LeaderboardScope];
+
+
+export const LeaderboardScope = {
+  family: 'family',
+  global: 'global',
+} as const;
+
 export interface Leaderboard {
   gameSlug: string;
   modeId: string;
   strategy: LeaderboardStrategy;
   /** @nullable */
   scoreDirection: LeaderboardScoreDirection;
+  scope: LeaderboardScope;
+  /** @nullable */
+  gameNightId: string | null;
   entries: LeaderboardEntry[];
 }
 

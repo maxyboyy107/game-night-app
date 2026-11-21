@@ -1,7 +1,18 @@
 import { createHmac, randomUUID } from "node:crypto";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, familyMembersTable, gameFavoritesTable, gameSessionsTable, userProfilesTable, type SessionPlayerScore } from "@workspace/db";
+import {
+  db,
+  familyMembersTable,
+  gameFavoritesTable,
+  gameNightLocalGamesTable,
+  gameNightMembershipsTable,
+  gameNightProfilesTable,
+  gameNightsTable,
+  gameSessionsTable,
+  userProfilesTable,
+  type SessionPlayerScore,
+} from "@workspace/db";
 import type { Game, ScorekeeperMode } from "@workspace/catalog";
 import {
   CreateHistoricalGameBody,
@@ -19,8 +30,12 @@ import {
   FinishGameSessionResponse,
   GetFamilyMemberHistoryParams,
   GetFamilyMemberHistoryResponse,
+  GetFamilyGameLeaderboardParams,
+  GetFamilyGameLeaderboardResponse,
   GetGameSessionParams,
   GetGameSessionResponse,
+  GetGlobalGameLeaderboardParams,
+  GetGlobalGameLeaderboardResponse,
   GetProfileResponse,
   ProfileBackup,
   RestoreProfileBackupBody,
@@ -121,11 +136,14 @@ async function restoreProfileBackupData(userId: string, backup: ProfileBackup): 
       id: game.id,
       userId,
       gameSlug: game.gameSlug,
+      gameNightId: game.gameNightId ?? null,
+      localGameId: game.localGameId ?? null,
       gameTitle: game.gameTitle ?? null,
       scorekeeperModeId: game.modeId,
       scorekeeperModeName: game.modeName,
       scorekeeperStrategy: game.strategy,
       scoreDirection: game.scoreDirection ?? "highest",
+      scorekeeperTarget: game.scorekeeperTarget ?? null,
       variation: game.variation,
       note: game.note,
       source: game.source,
@@ -212,16 +230,53 @@ async function gameTitles(): Promise<Record<string, string>> {
   return Object.fromEntries(catalog.games.map((game) => [game.slug, game.title]));
 }
 
-async function gameAndMode(gameSlug: string, modeId: string): Promise<{ game: Game; mode: ScorekeeperMode } | null> {
+async function gameAndMode(gameSlug: string, modeId: string, gameNightId?: string): Promise<{ game: Game; mode: ScorekeeperMode; localGameId?: string } | null> {
+  if (gameNightId) {
+    const [localGame] = await db.select().from(gameNightLocalGamesTable).where(and(
+      eq(gameNightLocalGamesTable.gameNightId, gameNightId),
+      eq(gameNightLocalGamesTable.slug, gameSlug),
+    ));
+    const localMode = localGame?.scorekeeperModes.find((candidate) => candidate.id === modeId);
+    if (localGame && localMode) {
+      return {
+        game: {
+          slug: localGame.slug,
+          title: localGame.title,
+          alternateNames: [],
+          categorySlugs: [],
+          eyebrow: "Game Night local game",
+          description: localGame.description,
+          players: `${localGame.minPlayers}–${localGame.maxPlayers} players`,
+          setup: "",
+          age: "",
+          duration: "",
+          equipment: [],
+          objective: localGame.description,
+          rules: localGame.rules.split("\n").filter(Boolean),
+          accent: "#f9be4b",
+          icon: "★",
+          scorekeeperModes: localGame.scorekeeperModes,
+          variations: localGame.variations,
+        },
+        mode: localMode,
+        localGameId: localGame.id,
+      };
+    }
+  }
   const catalog = await loadCatalogState();
   const game = catalog.games.find((candidate) => candidate.slug === gameSlug);
   const mode = game?.scorekeeperModes?.find((candidate) => candidate.id === modeId);
-  return game && mode ? { game, mode } : null;
+  if (game && mode) return { game, mode };
+  return null;
 }
 
 async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, titles: Record<string, string>) {
-  const strategy = row.scorekeeperStrategy === "winner" ? "winner" : "points";
-  const scoreDirection = strategy === "winner" ? null : row.scoreDirection === "lowest" ? "lowest" : "highest";
+  const strategy: ScorekeeperMode["strategy"] = row.scorekeeperStrategy === "winner"
+    ? "winner"
+    : row.scorekeeperStrategy === "first_to"
+      ? "first_to"
+      : "points";
+  const scoreDirection = strategy === "points" ? (row.scoreDirection === "lowest" ? "lowest" : "highest") : null;
   const numericScores = row.players.map((player) => player.score).filter((score): score is number => typeof score === "number");
   const winningScore = scoreDirection === "lowest" ? Math.min(...numericScores) : Math.max(...numericScores);
   const players = row.players.map((player) => ({
@@ -229,6 +284,7 @@ async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, title
     score: strategy === "winner" ? null : player.score ?? 0,
     isWinner: typeof player.isWinner === "boolean" ? player.isWinner : strategy === "points" && player.score === winningScore,
     familyMemberId: player.familyMemberId ?? null,
+    gameNightProfileId: player.gameNightProfileId ?? null,
   }));
   const winnerName = row.winnerName || players.filter((player) => player.isWinner).map((player) => player.name).join(" / ") || null;
   const playedAt = row.finishedAt ?? row.startedAt;
@@ -247,6 +303,9 @@ async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, title
     modeName: row.scorekeeperModeName,
     strategy,
     scoreDirection,
+    scorekeeperTarget: row.scorekeeperTarget,
+    gameNightId: row.gameNightId,
+    localGameId: row.localGameId,
     variation: row.variation,
     note: row.note,
     source: row.source === "historical" ? "historical" : "live",
@@ -284,16 +343,17 @@ async function buildProfile(userId: string) {
   });
 }
 
-function validPlayers(players: SessionPlayerScore[], options: { requireYou: boolean; strategy: "points" | "winner"; requireResults: boolean }): boolean {
+function validPlayers(players: SessionPlayerScore[], options: { requireYou: boolean; strategy: ScorekeeperMode["strategy"]; requireResults: boolean }): boolean {
   const youCount = players.filter((player) => player.isYou).length;
-  const hasValidScores = players.every((player) => options.strategy === "points"
+  const hasValidScores = players.every((player) => options.strategy !== "winner"
     ? (options.requireResults ? Number.isInteger(player.score) : player.score === null || Number.isInteger(player.score))
     : player.score === null);
   const hasWinner = players.some((player) => player.isWinner);
   return players.length >= 2 && players.length <= 8
     && (options.requireYou ? youCount === 1 : youCount <= 1)
-    && players.every((player) => !player.isYou || !player.familyMemberId)
+    && players.every((player) => !player.isYou || (!player.familyMemberId && !player.gameNightProfileId))
     && new Set(players.map((player) => player.familyMemberId).filter(Boolean)).size === players.filter((player) => player.familyMemberId).length
+    && new Set(players.map((player) => player.gameNightProfileId).filter(Boolean)).size === players.filter((player) => player.gameNightProfileId).length
     && players.every((player) => typeof player.name === "string" && player.name.trim().length > 0 && player.name.trim().length <= 32
       && (player.isWinner === undefined || typeof player.isWinner === "boolean"))
     && hasValidScores
@@ -311,13 +371,25 @@ async function loadOwnedFamilyMembers(userId: string, players: SessionPlayerScor
   return new Map(rows.map((member) => [member.id, member]));
 }
 
+async function loadGameNightProfiles(gameNightId: string, players: SessionPlayerScore[], requireActive: boolean) {
+  const ids = [...new Set(players.map((player) => player.gameNightProfileId).filter((id): id is string => Boolean(id)))];
+  if (!ids.length) return new Map<string, typeof gameNightProfilesTable.$inferSelect>();
+  const rows = await db.select().from(gameNightProfilesTable).where(and(
+    eq(gameNightProfilesTable.gameNightId, gameNightId),
+    inArray(gameNightProfilesTable.id, ids),
+  ));
+  if (rows.length !== ids.length || (requireActive && rows.some((profile) => !profile.isActive))) return null;
+  return new Map(rows.map((profile) => [profile.id, profile]));
+}
+
 function completedResults(players: SessionPlayerScore[], mode: ScorekeeperMode) {
   const normalized = players.map((player) => ({
     ...player,
     name: player.name.trim(),
     familyMemberId: player.familyMemberId ?? null,
-    score: mode.strategy === "points" ? player.score : null,
-    isWinner: mode.strategy === "winner" ? Boolean(player.isWinner) : false,
+    gameNightProfileId: player.gameNightProfileId ?? null,
+    score: mode.strategy === "winner" ? null : player.score,
+    isWinner: mode.strategy === "points" ? false : Boolean(player.isWinner),
   }));
   if (mode.strategy === "points") {
     const scores = normalized.map((player) => player.score ?? 0);
@@ -392,7 +464,18 @@ router.post("/profile/games", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Add a game, played date, at least two players, and valid results." });
     return;
   }
-  const configured = await gameAndMode(body.data.gameSlug, body.data.modeId);
+  if (body.data.gameNightId) {
+    const [membership] = await db.select().from(gameNightMembershipsTable).where(and(
+      eq(gameNightMembershipsTable.gameNightId, body.data.gameNightId),
+      eq(gameNightMembershipsTable.userId, userId),
+      eq(gameNightMembershipsTable.status, "active"),
+    ));
+    if (!membership) {
+      res.status(403).json({ error: "Join this Game Night before adding a result to its timeline." });
+      return;
+    }
+  }
+  const configured = await gameAndMode(body.data.gameSlug, body.data.modeId, body.data.gameNightId ?? undefined);
   if (!configured) {
     res.status(404).json({ error: "Game or scorekeeper mode not found." });
     return;
@@ -403,6 +486,7 @@ router.post("/profile/games", async (req, res): Promise<void> => {
     score: player.score,
     isYou: player.isYou,
     familyMemberId: player.familyMemberId,
+    gameNightProfileId: player.gameNightProfileId,
     isWinner: player.isWinner,
   }));
   if (!validPlayers(proposedPlayers, { requireYou: false, strategy: mode.strategy, requireResults: true })) {
@@ -421,21 +505,44 @@ router.post("/profile/games", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Choose family profiles that belong to this account." });
     return;
   }
+  const gameNightProfiles = body.data.gameNightId
+    ? await loadGameNightProfiles(body.data.gameNightId, proposedPlayers, false)
+    : new Map<string, typeof gameNightProfilesTable.$inferSelect>();
+  if (!gameNightProfiles || proposedPlayers.some((player) => player.gameNightProfileId && !body.data.gameNightId)) {
+    res.status(400).json({ error: "Choose family profiles that belong to this Game Night." });
+    return;
+  }
+  if (mode.strategy === "first_to") {
+    const target = mode.targetScore ?? 10;
+    const winners = proposedPlayers.filter((player) => player.isWinner);
+    if (winners.length !== 1 || (winners[0]?.score ?? 0) < target) {
+      res.status(400).json({ error: `Mark the single player who first reached ${target} points.` });
+      return;
+    }
+  }
   const players = proposedPlayers.map((player) => ({
     ...player,
-    name: player.familyMemberId ? familyMembers.get(player.familyMemberId)!.name : player.name.trim(),
+    name: player.gameNightProfileId
+      ? gameNightProfiles.get(player.gameNightProfileId)!.name
+      : player.familyMemberId
+        ? familyMembers.get(player.familyMemberId)!.name
+        : player.name.trim(),
     familyMemberId: player.familyMemberId ?? null,
+    gameNightProfileId: player.gameNightProfileId ?? null,
   }));
   const results = completedResults(players, mode);
   const playedAt = asDate(body.data.playedAt);
   const [session] = await db.insert(gameSessionsTable).values({
     userId,
     gameSlug: game.slug,
+    gameNightId: body.data.gameNightId ?? null,
+    localGameId: configured.localGameId ?? null,
     gameTitle: game.title,
     scorekeeperModeId: mode.id,
     scorekeeperModeName: mode.name,
     scorekeeperStrategy: mode.strategy,
     scoreDirection: mode.strategy === "points" ? mode.direction ?? "highest" : "highest",
+    scorekeeperTarget: mode.strategy === "first_to" ? mode.targetScore ?? 10 : null,
     variation: body.data.variation ?? null,
     note: body.data.note?.trim() || null,
     source: "historical",
@@ -622,7 +729,16 @@ router.post("/games/:gameSlug/sessions", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Choose a scorekeeper mode and add 2–8 players." });
     return;
   }
-  const configured = await gameAndMode(params.data.gameSlug, body.data.modeId);
+  const [membership] = await db.select().from(gameNightMembershipsTable).where(and(
+    eq(gameNightMembershipsTable.gameNightId, body.data.gameNightId),
+    eq(gameNightMembershipsTable.userId, userId),
+    eq(gameNightMembershipsTable.status, "active"),
+  ));
+  if (!membership) {
+    res.status(403).json({ error: "Join a Game Night before starting a scorekeeper." });
+    return;
+  }
+  const configured = await gameAndMode(params.data.gameSlug, body.data.modeId, body.data.gameNightId);
   if (!configured) {
     res.status(404).json({ error: "Game not found." });
     return;
@@ -630,7 +746,7 @@ router.post("/games/:gameSlug/sessions", async (req, res): Promise<void> => {
   const { game, mode } = configured;
   const proposedPlayers: SessionPlayerScore[] = body.data.players.map((player) => ({
     ...player,
-    score: mode.strategy === "points" ? 0 : null,
+    score: mode.strategy === "winner" ? null : 0,
     isWinner: false,
   }));
   if (!validPlayers(proposedPlayers, { requireYou: true, strategy: mode.strategy, requireResults: false })) {
@@ -647,20 +763,37 @@ router.post("/games/:gameSlug/sessions", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Choose active family profiles that belong to this account, each only once." });
     return;
   }
+  const gameNightProfiles = await loadGameNightProfiles(body.data.gameNightId, proposedPlayers, true);
+  if (!gameNightProfiles) {
+    res.status(400).json({ error: "Choose active family profiles from this Game Night, each only once." });
+    return;
+  }
+  if (proposedPlayers.some((player) => player.familyMemberId && player.gameNightProfileId)) {
+    res.status(400).json({ error: "A player can use one family profile at a time." });
+    return;
+  }
   const players = proposedPlayers.map((player) => ({
     ...player,
-    name: player.familyMemberId ? familyMembers.get(player.familyMemberId)!.name : player.name.trim(),
+    name: player.gameNightProfileId
+      ? gameNightProfiles.get(player.gameNightProfileId)!.name
+      : player.familyMemberId
+        ? familyMembers.get(player.familyMemberId)!.name
+        : player.name.trim(),
     familyMemberId: player.familyMemberId ?? null,
+    gameNightProfileId: player.gameNightProfileId ?? null,
     isWinner: false,
   }));
   const [session] = await db.insert(gameSessionsTable).values({
     userId,
     gameSlug: params.data.gameSlug,
+    gameNightId: body.data.gameNightId,
+    localGameId: configured.localGameId ?? null,
     gameTitle: game.title,
     scorekeeperModeId: mode.id,
     scorekeeperModeName: mode.name,
     scorekeeperStrategy: mode.strategy,
     scoreDirection: mode.strategy === "points" ? mode.direction ?? "highest" : "highest",
+    scorekeeperTarget: mode.strategy === "first_to" ? mode.targetScore ?? 10 : null,
     variation: body.data.variation ?? null,
     note: body.data.note?.trim() || null,
     source: "live",
@@ -707,7 +840,11 @@ router.patch("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     res.json(FinishGameSessionResponse.parse(await sessionResponse(existing, await gameTitles())));
     return;
   }
-  const strategy = existing.scorekeeperStrategy === "winner" ? "winner" : "points";
+  const strategy: ScorekeeperMode["strategy"] = existing.scorekeeperStrategy === "winner"
+    ? "winner"
+    : existing.scorekeeperStrategy === "first_to"
+      ? "first_to"
+      : "points";
   if (!validPlayers(body.data.players, { requireYou: true, strategy, requireResults: true })) {
     res.status(400).json({ error: strategy === "winner"
       ? "Choose at least one winner and include your player exactly once."
@@ -716,7 +853,9 @@ router.patch("/games/sessions/:sessionId", async (req, res): Promise<void> => {
   }
   if (existing.players.length !== body.data.players.length || body.data.players.some((player, index) => {
     const original = existing.players[index];
-    return !original || player.isYou !== original.isYou || (player.familyMemberId ?? null) !== (original.familyMemberId ?? null);
+    return !original || player.isYou !== original.isYou
+      || (player.familyMemberId ?? null) !== (original.familyMemberId ?? null)
+      || (player.gameNightProfileId ?? null) !== (original.gameNightProfileId ?? null);
   })) {
     res.status(400).json({ error: "Player identities cannot be changed after a table starts." });
     return;
@@ -726,7 +865,15 @@ router.patch("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     name: existing.scorekeeperModeName,
     strategy,
     ...(strategy === "points" ? { direction: existing.scoreDirection === "lowest" ? "lowest" : "highest" } : {}),
+    ...(strategy === "first_to" ? { targetScore: existing.scorekeeperTarget ?? 10 } : {}),
   };
+  if (strategy === "first_to") {
+    const winners = body.data.players.filter((player) => player.isWinner);
+    if (winners.length !== 1 || (winners[0]?.score ?? 0) < (existing.scorekeeperTarget ?? 10)) {
+      res.status(400).json({ error: `Mark the single player who first reached ${existing.scorekeeperTarget ?? 10} points.` });
+      return;
+    }
+  }
   const results = completedResults(body.data.players, mode);
   const [session] = await db.update(gameSessionsTable).set({
     players: results.players,
@@ -758,7 +905,7 @@ router.put("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Completed game not found." });
     return;
   }
-  const configured = await gameAndMode(body.data.gameSlug, body.data.modeId);
+  const configured = await gameAndMode(body.data.gameSlug, body.data.modeId, existing.gameNightId ?? undefined);
   if (!configured) {
     res.status(404).json({ error: "Game or scorekeeper mode not found." });
     return;
@@ -769,6 +916,7 @@ router.put("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     score: player.score,
     isYou: player.isYou,
     familyMemberId: player.familyMemberId,
+    gameNightProfileId: player.gameNightProfileId,
     isWinner: player.isWinner,
   }));
   if (!validPlayers(proposedPlayers, { requireYou: false, strategy: mode.strategy, requireResults: true })) {
@@ -786,20 +934,42 @@ router.put("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Choose family profiles that belong to this account." });
     return;
   }
+  const gameNightProfiles = existing.gameNightId
+    ? await loadGameNightProfiles(existing.gameNightId, proposedPlayers, false)
+    : new Map<string, typeof gameNightProfilesTable.$inferSelect>();
+  if (!gameNightProfiles || proposedPlayers.some((player) => player.gameNightProfileId && !existing.gameNightId)) {
+    res.status(400).json({ error: "Choose family profiles that belong to this Game Night." });
+    return;
+  }
+  if (mode.strategy === "first_to") {
+    const target = mode.targetScore ?? 10;
+    const winners = proposedPlayers.filter((player) => player.isWinner);
+    if (winners.length !== 1 || (winners[0]?.score ?? 0) < target) {
+      res.status(400).json({ error: `Mark the single player who first reached ${target} points.` });
+      return;
+    }
+  }
   const players = proposedPlayers.map((player) => ({
     ...player,
-    name: player.familyMemberId ? familyMembers.get(player.familyMemberId)!.name : player.name.trim(),
+    name: player.gameNightProfileId
+      ? gameNightProfiles.get(player.gameNightProfileId)!.name
+      : player.familyMemberId
+        ? familyMembers.get(player.familyMemberId)!.name
+        : player.name.trim(),
     familyMemberId: player.familyMemberId ?? null,
+    gameNightProfileId: player.gameNightProfileId ?? null,
   }));
   const results = completedResults(players, mode);
   const playedAt = asDate(body.data.playedAt);
   const [session] = await db.update(gameSessionsTable).set({
     gameSlug: game.slug,
     gameTitle: game.title,
+    localGameId: configured.localGameId ?? null,
     scorekeeperModeId: mode.id,
     scorekeeperModeName: mode.name,
     scorekeeperStrategy: mode.strategy,
     scoreDirection: mode.strategy === "points" ? mode.direction ?? "highest" : "highest",
+    scorekeeperTarget: mode.strategy === "first_to" ? mode.targetScore ?? 10 : null,
     variation: body.data.variation ?? null,
     note: body.data.note?.trim() || null,
     players: results.players,
@@ -835,7 +1005,83 @@ router.delete("/games/sessions/:sessionId", async (req, res): Promise<void> => {
   res.status(204).end();
 });
 
+async function gameNightLeaderboardEntries(gameSlug: string, mode: ScorekeeperMode, gameNightId?: string) {
+  const conditions = [
+    eq(gameSessionsTable.gameSlug, gameSlug),
+    eq(gameSessionsTable.scorekeeperModeId, mode.id),
+    eq(gameSessionsTable.status, "complete"),
+    ...(gameNightId ? [eq(gameSessionsTable.gameNightId, gameNightId)] : [isNotNull(gameSessionsTable.gameNightId)]),
+  ];
+  const sessions = await db.select().from(gameSessionsTable).where(and(...conditions));
+  const profileIds = [...new Set(sessions.flatMap((session) => session.players
+    .map((player) => player.gameNightProfileId)
+    .filter((id): id is string => Boolean(id))))];
+  const profiles = profileIds.length
+    ? await db.select().from(gameNightProfilesTable).where(inArray(gameNightProfilesTable.id, profileIds))
+    : [];
+  const nightIds = [...new Set(profiles.map((profile) => profile.gameNightId))];
+  const nights = nightIds.length
+    ? await db.select().from(gameNightsTable).where(inArray(gameNightsTable.id, nightIds))
+    : [];
+  const profilesById = new Map(profiles.map((profile) => [profile.id, profile]));
+  const nightsById = new Map(nights.map((night) => [night.id, night]));
+  const entries = new Map<string, {
+    id: string;
+    username: string;
+    avatarPath: string | null;
+    familyMemberId: null;
+    gameNightProfileId: string;
+    gameNightName: string;
+    score: number | null;
+    gamesPlayed: number;
+    wins: number;
+  }>();
+  for (const session of sessions) {
+    const numericScores = session.players.map((player) => player.score).filter((score): score is number => typeof score === "number");
+    const winningScore = mode.direction === "lowest" ? Math.min(...numericScores) : Math.max(...numericScores);
+    for (const player of session.players) {
+      if (!player.gameNightProfileId) continue;
+      const profile = profilesById.get(player.gameNightProfileId);
+      const night = profile ? nightsById.get(profile.gameNightId) : null;
+      if (!profile || !night) continue;
+      const entry = entries.get(profile.id) ?? {
+        id: `profile:${profile.id}`,
+        username: profile.name,
+        avatarPath: null,
+        familyMemberId: null,
+        gameNightProfileId: profile.id,
+        gameNightName: night.name,
+        score: null,
+        gamesPlayed: 0,
+        wins: 0,
+      };
+      entry.gamesPlayed += 1;
+      const isWinner = typeof player.isWinner === "boolean"
+        ? player.isWinner
+        : mode.strategy === "points" && typeof player.score === "number" && player.score === winningScore;
+      if (isWinner) entry.wins += 1;
+      if (mode.strategy === "points" && typeof player.score === "number") {
+        if (entry.score === null || (mode.direction === "lowest" ? player.score < entry.score : player.score > entry.score)) {
+          entry.score = player.score;
+        }
+      } else if (mode.strategy === "first_to" && typeof player.score === "number") {
+        entry.score = Math.max(entry.score ?? 0, player.score);
+      }
+      entries.set(profile.id, entry);
+    }
+  }
+  return [...entries.values()].sort((a, b) => {
+    if (mode.strategy === "points") {
+      const difference = (a.score ?? 0) - (b.score ?? 0);
+      return (mode.direction === "lowest" ? difference : -difference) || b.wins - a.wins;
+    }
+    return b.wins - a.wins || b.gamesPlayed - a.gamesPlayed;
+  }).slice(0, 20);
+}
+
 router.get("/games/:gameSlug/modes/:modeId/leaderboard", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
   const params = GetGameLeaderboardParams.safeParse(req.params);
   if (!params.success) {
     res.status(400).json({ error: "Invalid game." });
@@ -901,6 +1147,8 @@ router.get("/games/:gameSlug/modes/:modeId/leaderboard", async (req, res): Promi
         username,
         avatarPath,
         familyMemberId,
+      gameNightProfileId: null,
+      gameNightName: null,
         score: null,
         gamesPlayed: 0,
         wins: 0,
@@ -918,7 +1166,7 @@ router.get("/games/:gameSlug/modes/:modeId/leaderboard", async (req, res): Promi
       entries.set(key, entry);
     }
   }
-  const scoreDirection = mode.strategy === "winner" ? null : mode.direction ?? "highest";
+  const scoreDirection = mode.strategy === "points" ? mode.direction ?? "highest" : null;
   const sortedEntries = [...entries.values()].sort((a, b) => {
     if (mode.strategy === "points") {
       const scoreDifference = (a.score ?? 0) - (b.score ?? 0);
@@ -931,7 +1179,68 @@ router.get("/games/:gameSlug/modes/:modeId/leaderboard", async (req, res): Promi
     modeId: mode.id,
     strategy: mode.strategy,
     scoreDirection,
+    scope: "global",
+    gameNightId: null,
     entries: sortedEntries,
+  }));
+});
+
+router.get("/games/:gameSlug/modes/:modeId/leaderboard/global", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  const params = GetGlobalGameLeaderboardParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid game." });
+    return;
+  }
+  const configured = await gameAndMode(params.data.gameSlug, params.data.modeId);
+  if (!configured) {
+    res.status(404).json({ error: "Game not found." });
+    return;
+  }
+  const { mode } = configured;
+  res.json(GetGlobalGameLeaderboardResponse.parse({
+    gameSlug: params.data.gameSlug,
+    modeId: mode.id,
+    strategy: mode.strategy,
+    scoreDirection: mode.strategy === "points" ? mode.direction ?? "highest" : null,
+    scope: "global",
+    gameNightId: null,
+    entries: await gameNightLeaderboardEntries(params.data.gameSlug, mode),
+  }));
+});
+
+router.get("/games/:gameSlug/modes/:modeId/leaderboard/family/:gameNightId", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  const params = GetFamilyGameLeaderboardParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid game or Game Night." });
+    return;
+  }
+  const [membership] = await db.select().from(gameNightMembershipsTable).where(and(
+    eq(gameNightMembershipsTable.gameNightId, params.data.gameNightId),
+    eq(gameNightMembershipsTable.userId, userId),
+    eq(gameNightMembershipsTable.status, "active"),
+  ));
+  if (!membership) {
+    res.status(403).json({ error: "Join this Game Night to view its leaderboard." });
+    return;
+  }
+  const configured = await gameAndMode(params.data.gameSlug, params.data.modeId, params.data.gameNightId);
+  if (!configured) {
+    res.status(404).json({ error: "Game or scorekeeper mode not found." });
+    return;
+  }
+  const { mode } = configured;
+  res.json(GetFamilyGameLeaderboardResponse.parse({
+    gameSlug: params.data.gameSlug,
+    modeId: mode.id,
+    strategy: mode.strategy,
+    scoreDirection: mode.strategy === "points" ? mode.direction ?? "highest" : null,
+    scope: "family",
+    gameNightId: params.data.gameNightId,
+    entries: await gameNightLeaderboardEntries(params.data.gameSlug, mode, params.data.gameNightId),
   }));
 });
 

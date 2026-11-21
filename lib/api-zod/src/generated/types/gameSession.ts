@@ -31,6 +31,12 @@ export interface GameSession {
   /** @nullable */
   scoreDirection: GameSessionScoreDirection;
   /** @nullable */
+  scorekeeperTarget?: number | null;
+  /** @nullable */
+  gameNightId?: string | null;
+  /** @nullable */
+  localGameId?: string | null;
+  /** @nullable */
   variation: string | null;
   /** @nullable */
   note: string | null;

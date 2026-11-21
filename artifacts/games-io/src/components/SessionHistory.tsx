@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import { CalendarDays, Download, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
-import { createHistoricalGame, deleteGameSession, exportProfileBackup, getGetProfileGamesQueryKey, getProfileGames, restoreProfileBackup, updateGameSession } from '@workspace/api-client-react';
+import { createHistoricalGame, deleteGameSession, exportProfileBackup, getProfileGames, restoreProfileBackup, updateGameSession } from '@workspace/api-client-react';
 import type { FamilyMember, GameSession, ProfileBackup, SessionPlayer } from '@workspace/api-client-react';
 import type { Game } from '../data/games';
 
@@ -20,7 +19,6 @@ function downloadJson(filename: string, data: unknown) {
 }
 
 export function SessionHistory({ games, familyMembers, onChanged }: { games: Game[]; familyMembers: FamilyMember[]; onChanged: () => Promise<void> }) {
-  const queryClient = useQueryClient();
   const [sessions, setSessions] = useState<GameSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -41,7 +39,6 @@ export function SessionHistory({ games, familyMembers, onChanged }: { games: Gam
     try {
       const result = await getProfileGames();
       setSessions(result.games);
-      await queryClient.invalidateQueries({ queryKey: getGetProfileGamesQueryKey() });
     } catch { setLoadError('Game history could not be loaded.'); }
     finally { setLoading(false); }
   };
@@ -113,7 +110,6 @@ export function SessionHistory({ games, familyMembers, onChanged }: { games: Gam
       if (!window.confirm('Restore this backup to the signed-in account? It replaces this account’s profile data and history.')) return;
       await restoreProfileBackup(backup);
       setNotice('Profile backup restored.'); await refresh();
-      await queryClient.invalidateQueries();
       await onChanged();
     } catch { setBackupError('This backup could not be restored. Confirm it is a valid games.io profile backup for this account.'); }
     finally { setBackupBusy(false); if (importRef.current) importRef.current.value = ''; }

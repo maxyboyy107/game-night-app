@@ -16,6 +16,8 @@ tags:
     description: Object storage upload and serving endpoints.
   - name: Community
     description: User profiles, favorites, game sessions, and leaderboards.
+  - name: GameNights
+    description: Persistent groups, invitations, family profiles, house rules, and local games.
 paths:
   /healthz:
     get:
@@ -412,6 +414,299 @@ paths:
           description: Sign-in required
         "404":
           description: Game not found
+  /game-nights:
+    get:
+      tags: [GameNights]
+      operationId: listGameNights
+      summary: List this account's Game Nights and invitations
+      responses:
+        "200":
+          description: Groups and pending private invitations
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightList" }
+        "401":
+          description: Sign-in required
+    post:
+      tags: [GameNights]
+      operationId: createGameNight
+      summary: Create a persistent Game Night
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightCreateInput" }
+      responses:
+        "201":
+          description: Created Game Night
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightSummary" }
+        "401":
+          description: Sign-in required
+  /game-nights/join:
+    post:
+      tags: [GameNights]
+      operationId: joinGameNight
+      summary: Join or request access using a Game Night code
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightJoinInput" }
+      responses:
+        "200":
+          description: Joined or pending host approval
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightJoinResponse" }
+        "400":
+          description: Invalid or unavailable join code
+        "401":
+          description: Sign-in required
+  /game-nights/{gameNightId}:
+    get:
+      tags: [GameNights]
+      operationId: getGameNight
+      summary: Get a Game Night, its members, profiles, rules, games, and timeline
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Game Night workspace
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightDetail" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Active membership required
+        "404":
+          description: Game Night not found
+  /game-nights/{gameNightId}/members/{membershipId}:
+    patch:
+      tags: [GameNights]
+      operationId: updateGameNightMembership
+      summary: Accept, deny, or remove a Game Night member
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: membershipId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightMembershipAction" }
+      responses:
+        "200":
+          description: Updated Game Night membership
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightMember" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host or invited account required
+        "404":
+          description: Membership not found
+  /game-nights/{gameNightId}/invites:
+    post:
+      tags: [GameNights]
+      operationId: inviteToGameNight
+      summary: Invite an account by username to a private Game Night
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightInviteInput" }
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightMember" }
+        "400":
+          description: Username not found or invitation invalid
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+  /game-nights/{gameNightId}/profiles:
+    post:
+      tags: [GameNights]
+      operationId: createGameNightProfile
+      summary: Add a family profile to a Game Night
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightProfileInput" }
+      responses:
+        "201":
+          description: Family profile created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightProfile" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+  /game-nights/{gameNightId}/profiles/{profileId}:
+    patch:
+      tags: [GameNights]
+      operationId: updateGameNightProfile
+      summary: Rename or archive a Game Night family profile
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: profileId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightProfileUpdate" }
+      responses:
+        "200":
+          description: Updated family profile
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightProfile" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+        "404":
+          description: Profile not found
+  /game-nights/{gameNightId}/house-rules/{gameSlug}:
+    put:
+      tags: [GameNights]
+      operationId: saveGameNightHouseRules
+      summary: Set house rules and an article-specific rules version
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: gameSlug
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightHouseRulesInput" }
+      responses:
+        "200":
+          description: Saved house rules
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightHouseRules" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+  /game-nights/{gameNightId}/local-games:
+    post:
+      tags: [GameNights]
+      operationId: createGameNightLocalGame
+      summary: Create a Game Night-only local game
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightLocalGameInput" }
+      responses:
+        "201":
+          description: Local game created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightLocalGame" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+  /game-nights/{gameNightId}/local-games/{localGameId}:
+    put:
+      tags: [GameNights]
+      operationId: updateGameNightLocalGame
+      summary: Edit a Game Night-only local game
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: localGameId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightLocalGameInput" }
+      responses:
+        "200":
+          description: Local game updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightLocalGame" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+        "404":
+          description: Local game not found
+    delete:
+      tags: [GameNights]
+      operationId: deleteGameNightLocalGame
+      summary: Remove a local game from a Game Night
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: localGameId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "204":
+          description: Local game removed
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+        "404":
+          description: Local game not found
   /games/{gameSlug}/sessions:
     post:
       tags: [Community]
@@ -566,8 +861,206 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Leaderboard"
+  /games/{gameSlug}/modes/{modeId}/leaderboard/global:
+    get:
+      tags: [Community]
+      operationId: getGlobalGameLeaderboard
+      summary: Get the global family-profile leaderboard
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: modeId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Global leaderboard
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Leaderboard" }
+        "401":
+          description: Sign-in required
+  /games/{gameSlug}/modes/{modeId}/leaderboard/family/{gameNightId}:
+    get:
+      tags: [Community]
+      operationId: getFamilyGameLeaderboard
+      summary: Get the current Game Night family leaderboard
+      parameters:
+        - name: gameSlug
+          in: path
+          required: true
+          schema: { type: string }
+        - name: modeId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Family leaderboard
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Leaderboard" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Active Game Night membership required
 components:
   schemas:
+    GameNightCreateInput:
+      type: object
+      required: [name, accessMode]
+      properties:
+        name: { type: string, minLength: 2, maxLength: 48 }
+        accessMode: { type: string, enum: [public, invitational, private] }
+    GameNightJoinInput:
+      type: object
+      required: [code]
+      properties:
+        code: { type: string, minLength: 4, maxLength: 4, pattern: "^[A-Z]{4}$" }
+    GameNightSummary:
+      type: object
+      required: [id, name, accessMode, joinCode, role, memberCount]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        accessMode: { type: string, enum: [public, invitational, private] }
+        joinCode: { type: ["string", "null"] }
+        role: { type: string, enum: [host, member] }
+        memberCount: { type: integer }
+    GameNightInvitation:
+      type: object
+      required: [membershipId, gameNightId, gameNightName, accessMode, hostUsername]
+      properties:
+        membershipId: { type: string, format: uuid }
+        gameNightId: { type: string, format: uuid }
+        gameNightName: { type: string }
+        accessMode: { type: string, enum: [public, invitational, private] }
+        hostUsername: { type: string }
+    GameNightList:
+      type: object
+      required: [gameNights, invitations]
+      properties:
+        gameNights:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightSummary" }
+        invitations:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightInvitation" }
+    GameNightJoinResponse:
+      type: object
+      required: [status, gameNight]
+      properties:
+        status: { type: string, enum: [joined, pending, already_member] }
+        gameNight: { $ref: "#/components/schemas/GameNightSummary" }
+    GameNightMember:
+      type: object
+      required: [id, username, role, status]
+      properties:
+        id: { type: string, format: uuid }
+        username: { type: string }
+        role: { type: string, enum: [host, member] }
+        status: { type: string, enum: [active, pending, invited, denied] }
+    GameNightMembershipAction:
+      type: object
+      required: [action]
+      properties:
+        action: { type: string, enum: [accept, deny, remove] }
+    GameNightInviteInput:
+      type: object
+      required: [username]
+      properties:
+        username: { type: string, minLength: 3, maxLength: 20 }
+    GameNightProfile:
+      type: object
+      required: [id, name, isActive, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        isActive: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    GameNightProfileInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 32 }
+    GameNightProfileUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 32 }
+        isActive: { type: boolean }
+    GameNightHouseRules:
+      type: object
+      required: [gameSlug, rulesText, variation, rulesVersion, updatedAt]
+      properties:
+        gameSlug: { type: string }
+        rulesText: { type: ["string", "null"], maxLength: 6000 }
+        variation: { type: ["string", "null"], maxLength: 120 }
+        rulesVersion: { type: ["string", "null"], maxLength: 24 }
+        updatedAt: { type: string, format: date-time }
+    GameNightHouseRulesInput:
+      type: object
+      required: [rulesText, variation, rulesVersion]
+      properties:
+        rulesText: { type: ["string", "null"], maxLength: 6000 }
+        variation: { type: ["string", "null"], maxLength: 120 }
+        rulesVersion: { type: ["string", "null"], maxLength: 24 }
+    GameNightLocalGame:
+      type: object
+      required: [id, slug, title, description, minPlayers, maxPlayers, rules, scorekeeperModes, variations, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        slug: { type: string }
+        title: { type: string }
+        description: { type: string }
+        minPlayers: { type: integer, minimum: 1 }
+        maxPlayers: { type: integer, minimum: 1 }
+        rules: { type: string }
+        scorekeeperModes:
+          type: array
+          items: { $ref: "#/components/schemas/ScorekeeperMode" }
+        variations: { type: array, items: { type: string } }
+        createdAt: { type: string, format: date-time }
+    GameNightLocalGameInput:
+      type: object
+      required: [title, description, minPlayers, maxPlayers, rules, scorekeeperModes, variations]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 500 }
+        minPlayers: { type: integer, minimum: 1, maximum: 100 }
+        maxPlayers: { type: integer, minimum: 1, maximum: 100 }
+        rules: { type: string, maxLength: 6000 }
+        scorekeeperModes:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/ScorekeeperMode" }
+        variations: { type: array, items: { type: string, maxLength: 120 } }
+    GameNightDetail:
+      type: object
+      required: [night, members, profiles, houseRules, localGames, timeline]
+      properties:
+        night: { $ref: "#/components/schemas/GameNightSummary" }
+        members:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightMember" }
+        profiles:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightProfile" }
+        houseRules:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightHouseRules" }
+        localGames:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightLocalGame" }
+        timeline:
+          type: array
+          items: { $ref: "#/components/schemas/GameSession" }
     HealthStatus:
       type: object
       properties:
@@ -592,8 +1085,9 @@ components:
       properties:
         id: { type: string, minLength: 1 }
         name: { type: string, minLength: 1, maxLength: 48 }
-        strategy: { type: string, enum: [points, winner] }
+        strategy: { type: string, enum: [points, winner, first_to] }
         direction: { type: string, enum: [highest, lowest] }
+        targetScore: { type: integer, minimum: 1, maximum: 1000000 }
     Game:
       type: object
       required: [slug, title, alternateNames, categorySlugs, eyebrow, description, players, setup, age, duration, equipment, objective, rules, accent, icon]
@@ -709,6 +1203,7 @@ components:
         name: { type: string, minLength: 1, maxLength: 32 }
         isYou: { type: boolean }
         familyMemberId: { type: ["string", "null"], format: uuid }
+        gameNightProfileId: { type: ["string", "null"], format: uuid }
     SessionPlayer:
       type: object
       required: [name, score, isYou, familyMemberId, isWinner]
@@ -717,12 +1212,14 @@ components:
         score: { type: [integer, "null"] }
         isYou: { type: boolean }
         familyMemberId: { type: ["string", "null"], format: uuid }
+        gameNightProfileId: { type: ["string", "null"], format: uuid }
         isWinner: { type: boolean }
     GameSessionInput:
       type: object
-      required: [players, modeId]
+      required: [players, modeId, gameNightId]
       properties:
         modeId: { type: string, minLength: 1 }
+        gameNightId: { type: string, format: uuid }
         variation: { type: ["string", "null"] }
         note: { type: ["string", "null"], maxLength: 1000 }
         players:
@@ -746,6 +1243,7 @@ components:
       properties:
         gameSlug: { type: string, minLength: 1 }
         modeId: { type: string, minLength: 1 }
+        gameNightId: { type: ["string", "null"], format: uuid }
         variation: { type: ["string", "null"] }
         note: { type: ["string", "null"], maxLength: 1000 }
         playedAt: { type: string, format: date-time }
@@ -784,8 +1282,11 @@ components:
         finishedAt: { type: [string, "null"], format: date-time }
         modeId: { type: string }
         modeName: { type: string }
-        strategy: { type: string, enum: [points, winner] }
+        strategy: { type: string, enum: [points, winner, first_to] }
         scoreDirection: { type: ["string", "null"], enum: [highest, lowest, null] }
+        scorekeeperTarget: { type: ["integer", "null"] }
+        gameNightId: { type: ["string", "null"], format: uuid }
+        localGameId: { type: ["string", "null"], format: uuid }
         variation: { type: ["string", "null"] }
         note: { type: ["string", "null"] }
         source: { type: string, enum: [live, historical] }
@@ -860,22 +1361,26 @@ components:
         favorited: { type: boolean }
     LeaderboardEntry:
       type: object
-      required: [id, username, avatarPath, familyMemberId, score, gamesPlayed, wins]
+      required: [id, username, avatarPath, familyMemberId, gameNightProfileId, gameNightName, score, gamesPlayed, wins]
       properties:
         id: { type: string }
         username: { type: string }
         avatarPath: { type: [string, "null"] }
         familyMemberId: { type: ["string", "null"], format: uuid }
+        gameNightProfileId: { type: ["string", "null"], format: uuid }
+        gameNightName: { type: ["string", "null"] }
         score: { type: ["integer", "null"] }
         gamesPlayed: { type: integer }
         wins: { type: integer }
     Leaderboard:
       type: object
-      required: [gameSlug, modeId, strategy, scoreDirection, entries]
+      required: [gameSlug, modeId, strategy, scoreDirection, scope, gameNightId, entries]
       properties:
         gameSlug: { type: string }
         modeId: { type: string }
-        strategy: { type: string, enum: [points, winner] }
+        strategy: { type: string, enum: [points, winner, first_to] }
         scoreDirection: { type: ["string", "null"], enum: [highest, lowest, null] }
+        scope: { type: string, enum: [family, global] }
+        gameNightId: { type: ["string", "null"], format: uuid }
         entries: { type: array, items: { $ref: "#/components/schemas/LeaderboardEntry" } }
 

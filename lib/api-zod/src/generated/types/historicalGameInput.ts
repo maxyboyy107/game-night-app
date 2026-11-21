@@ -13,6 +13,8 @@ export interface HistoricalGameInput {
   /** @minLength 1 */
   modeId: string;
   /** @nullable */
+  gameNightId?: string | null;
+  /** @nullable */
   variation?: string | null;
   /**
      * @maxLength 1000

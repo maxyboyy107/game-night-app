@@ -12,4 +12,5 @@ export type LeaderboardStrategy = typeof LeaderboardStrategy[keyof typeof Leader
 export const LeaderboardStrategy = {
   points: 'points',
   winner: 'winner',
+  first_to: 'first_to',
 } as const;

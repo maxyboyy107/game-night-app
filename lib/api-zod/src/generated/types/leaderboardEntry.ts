@@ -14,6 +14,10 @@ export interface LeaderboardEntry {
   /** @nullable */
   familyMemberId: string | null;
   /** @nullable */
+  gameNightProfileId: string | null;
+  /** @nullable */
+  gameNightName: string | null;
+  /** @nullable */
   score: number | null;
   gamesPlayed: number;
   wins: number;

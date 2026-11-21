@@ -31,6 +31,22 @@ import type {
   FamilyMemberUpdate,
   FavoriteResponse,
   FavoriteUpdate,
+  GameNightCreateInput,
+  GameNightDetail,
+  GameNightHouseRules,
+  GameNightHouseRulesInput,
+  GameNightInviteInput,
+  GameNightJoinInput,
+  GameNightJoinResponse,
+  GameNightList,
+  GameNightLocalGame,
+  GameNightLocalGameInput,
+  GameNightMember,
+  GameNightMembershipAction,
+  GameNightProfile,
+  GameNightProfileInput,
+  GameNightProfileUpdate,
+  GameNightSummary,
   GameSession,
   GameSessionFinish,
   GameSessionInput,
@@ -1738,6 +1754,1043 @@ export const useSetGameFavorite = <TError = ErrorType<void>,
       return useMutation(getSetGameFavoriteMutationOptions(options));
     }
 
+export const getListGameNightsUrl = () => {
+
+
+
+
+  return `/api/game-nights`
+}
+
+/**
+ * @summary List this account's Game Nights and invitations
+ */
+export const listGameNights = async ( options?: Parameters<typeof customFetch>[1]): Promise<GameNightList> => {
+
+  return customFetch<GameNightList>(getListGameNightsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListGameNightsQueryKey = () => {
+    return [
+    `/api/game-nights`
+    ] as const;
+    }
+
+
+export const getListGameNightsQueryOptions = <TData = Awaited<ReturnType<typeof listGameNights>>, TError = ErrorType<void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGameNights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListGameNightsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listGameNights>>> = ({ signal }) => listGameNights({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listGameNights>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListGameNightsQueryResult = NonNullable<Awaited<ReturnType<typeof listGameNights>>>
+export type ListGameNightsQueryError = ErrorType<void>
+
+
+/**
+ * @summary List this account's Game Nights and invitations
+ */
+
+export function useListGameNights<TData = Awaited<ReturnType<typeof listGameNights>>, TError = ErrorType<void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listGameNights>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListGameNightsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateGameNightUrl = () => {
+
+
+
+
+  return `/api/game-nights`
+}
+
+/**
+ * @summary Create a persistent Game Night
+ */
+export const createGameNight = async (gameNightCreateInput: GameNightCreateInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightSummary> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightSummary>(getCreateGameNightUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightCreateInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGameNightMutationKey = () => ['createGameNight'] as const;
+
+export const getCreateGameNightMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGameNight>>, TError,CreateGameNightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGameNight>>, TError,CreateGameNightMutationVariables, TContext> => {
+
+const mutationKey = getCreateGameNightMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGameNight>>, CreateGameNightMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createGameNight(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGameNightMutationResult = NonNullable<Awaited<ReturnType<typeof createGameNight>>>
+    export type CreateGameNightMutationBody = BodyType<GameNightCreateInput>
+    export type CreateGameNightMutationError = ErrorType<void>
+    export type CreateGameNightMutationVariables = {data: BodyType<GameNightCreateInput>}
+
+    /**
+ * @summary Create a persistent Game Night
+ */
+export const useCreateGameNight = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGameNight>>, TError,CreateGameNightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGameNight>>,
+        TError,
+        CreateGameNightMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGameNightMutationOptions(options));
+    }
+
+export const getJoinGameNightUrl = () => {
+
+
+
+
+  return `/api/game-nights/join`
+}
+
+/**
+ * @summary Join or request access using a Game Night code
+ */
+export const joinGameNight = async (gameNightJoinInput: GameNightJoinInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightJoinResponse> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightJoinResponse>(getJoinGameNightUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightJoinInput)
+  }
+);}
+
+
+
+
+
+export const getJoinGameNightMutationKey = () => ['joinGameNight'] as const;
+
+export const getJoinGameNightMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinGameNight>>, TError,JoinGameNightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinGameNight>>, TError,JoinGameNightMutationVariables, TContext> => {
+
+const mutationKey = getJoinGameNightMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinGameNight>>, JoinGameNightMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  joinGameNight(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinGameNightMutationResult = NonNullable<Awaited<ReturnType<typeof joinGameNight>>>
+    export type JoinGameNightMutationBody = BodyType<GameNightJoinInput>
+    export type JoinGameNightMutationError = ErrorType<void>
+    export type JoinGameNightMutationVariables = {data: BodyType<GameNightJoinInput>}
+
+    /**
+ * @summary Join or request access using a Game Night code
+ */
+export const useJoinGameNight = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinGameNight>>, TError,JoinGameNightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinGameNight>>,
+        TError,
+        JoinGameNightMutationVariables,
+        TContext
+      > => {
+      return useMutation(getJoinGameNightMutationOptions(options));
+    }
+
+export const getGetGameNightUrl = (gameNightId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}`
+}
+
+/**
+ * @summary Get a Game Night, its members, profiles, rules, games, and timeline
+ */
+export const getGameNight = async (gameNightId: string, options?: Parameters<typeof customFetch>[1]): Promise<GameNightDetail> => {
+
+  return customFetch<GameNightDetail>(getGetGameNightUrl(gameNightId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGameNightQueryKey = (gameNightId: string,) => {
+    return [
+    `/api/game-nights/${gameNightId}`
+    ] as const;
+    }
+
+
+export const getGetGameNightQueryOptions = <TData = Awaited<ReturnType<typeof getGameNight>>, TError = ErrorType<void>>(gameNightId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameNight>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGameNightQueryKey(gameNightId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGameNight>>> = ({ signal }) => getGameNight(gameNightId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: gameNightId !== null && gameNightId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGameNight>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGameNightQueryResult = NonNullable<Awaited<ReturnType<typeof getGameNight>>>
+export type GetGameNightQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get a Game Night, its members, profiles, rules, games, and timeline
+ */
+
+export function useGetGameNight<TData = Awaited<ReturnType<typeof getGameNight>>, TError = ErrorType<void>>(
+ gameNightId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGameNight>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGameNightQueryOptions(gameNightId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateGameNightMembershipUrl = (gameNightId: string,
+    membershipId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/members/${membershipId}`
+}
+
+/**
+ * @summary Accept, deny, or remove a Game Night member
+ */
+export const updateGameNightMembership = async (gameNightId: string,
+    membershipId: string,
+    gameNightMembershipAction: GameNightMembershipAction, options?: Parameters<typeof customFetch>[1]): Promise<GameNightMember> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightMember>(getUpdateGameNightMembershipUrl(gameNightId,membershipId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightMembershipAction)
+  }
+);}
+
+
+
+
+
+export const getUpdateGameNightMembershipMutationKey = () => ['updateGameNightMembership'] as const;
+
+export const getUpdateGameNightMembershipMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameNightMembership>>, TError,UpdateGameNightMembershipMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGameNightMembership>>, TError,UpdateGameNightMembershipMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGameNightMembershipMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGameNightMembership>>, UpdateGameNightMembershipMutationVariables> = (props) => {
+          const {gameNightId,membershipId,data} = props ?? {};
+
+          return  updateGameNightMembership(gameNightId,membershipId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGameNightMembershipMutationResult = NonNullable<Awaited<ReturnType<typeof updateGameNightMembership>>>
+    export type UpdateGameNightMembershipMutationBody = BodyType<GameNightMembershipAction>
+    export type UpdateGameNightMembershipMutationError = ErrorType<void>
+    export type UpdateGameNightMembershipMutationVariables = {gameNightId: string;membershipId: string;data: BodyType<GameNightMembershipAction>}
+
+    /**
+ * @summary Accept, deny, or remove a Game Night member
+ */
+export const useUpdateGameNightMembership = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameNightMembership>>, TError,UpdateGameNightMembershipMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGameNightMembership>>,
+        TError,
+        UpdateGameNightMembershipMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGameNightMembershipMutationOptions(options));
+    }
+
+export const getInviteToGameNightUrl = (gameNightId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/invites`
+}
+
+/**
+ * @summary Invite an account by username to a private Game Night
+ */
+export const inviteToGameNight = async (gameNightId: string,
+    gameNightInviteInput: GameNightInviteInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightMember> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightMember>(getInviteToGameNightUrl(gameNightId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightInviteInput)
+  }
+);}
+
+
+
+
+
+export const getInviteToGameNightMutationKey = () => ['inviteToGameNight'] as const;
+
+export const getInviteToGameNightMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteToGameNight>>, TError,InviteToGameNightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof inviteToGameNight>>, TError,InviteToGameNightMutationVariables, TContext> => {
+
+const mutationKey = getInviteToGameNightMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof inviteToGameNight>>, InviteToGameNightMutationVariables> = (props) => {
+          const {gameNightId,data} = props ?? {};
+
+          return  inviteToGameNight(gameNightId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type InviteToGameNightMutationResult = NonNullable<Awaited<ReturnType<typeof inviteToGameNight>>>
+    export type InviteToGameNightMutationBody = BodyType<GameNightInviteInput>
+    export type InviteToGameNightMutationError = ErrorType<void>
+    export type InviteToGameNightMutationVariables = {gameNightId: string;data: BodyType<GameNightInviteInput>}
+
+    /**
+ * @summary Invite an account by username to a private Game Night
+ */
+export const useInviteToGameNight = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof inviteToGameNight>>, TError,InviteToGameNightMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof inviteToGameNight>>,
+        TError,
+        InviteToGameNightMutationVariables,
+        TContext
+      > => {
+      return useMutation(getInviteToGameNightMutationOptions(options));
+    }
+
+export const getCreateGameNightProfileUrl = (gameNightId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/profiles`
+}
+
+/**
+ * @summary Add a family profile to a Game Night
+ */
+export const createGameNightProfile = async (gameNightId: string,
+    gameNightProfileInput: GameNightProfileInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightProfile>(getCreateGameNightProfileUrl(gameNightId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightProfileInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGameNightProfileMutationKey = () => ['createGameNightProfile'] as const;
+
+export const getCreateGameNightProfileMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGameNightProfile>>, TError,CreateGameNightProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGameNightProfile>>, TError,CreateGameNightProfileMutationVariables, TContext> => {
+
+const mutationKey = getCreateGameNightProfileMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGameNightProfile>>, CreateGameNightProfileMutationVariables> = (props) => {
+          const {gameNightId,data} = props ?? {};
+
+          return  createGameNightProfile(gameNightId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGameNightProfileMutationResult = NonNullable<Awaited<ReturnType<typeof createGameNightProfile>>>
+    export type CreateGameNightProfileMutationBody = BodyType<GameNightProfileInput>
+    export type CreateGameNightProfileMutationError = ErrorType<void>
+    export type CreateGameNightProfileMutationVariables = {gameNightId: string;data: BodyType<GameNightProfileInput>}
+
+    /**
+ * @summary Add a family profile to a Game Night
+ */
+export const useCreateGameNightProfile = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGameNightProfile>>, TError,CreateGameNightProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGameNightProfile>>,
+        TError,
+        CreateGameNightProfileMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGameNightProfileMutationOptions(options));
+    }
+
+export const getUpdateGameNightProfileUrl = (gameNightId: string,
+    profileId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/profiles/${profileId}`
+}
+
+/**
+ * @summary Rename or archive a Game Night family profile
+ */
+export const updateGameNightProfile = async (gameNightId: string,
+    profileId: string,
+    gameNightProfileUpdate: GameNightProfileUpdate, options?: Parameters<typeof customFetch>[1]): Promise<GameNightProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightProfile>(getUpdateGameNightProfileUrl(gameNightId,profileId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightProfileUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateGameNightProfileMutationKey = () => ['updateGameNightProfile'] as const;
+
+export const getUpdateGameNightProfileMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameNightProfile>>, TError,UpdateGameNightProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGameNightProfile>>, TError,UpdateGameNightProfileMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGameNightProfileMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGameNightProfile>>, UpdateGameNightProfileMutationVariables> = (props) => {
+          const {gameNightId,profileId,data} = props ?? {};
+
+          return  updateGameNightProfile(gameNightId,profileId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGameNightProfileMutationResult = NonNullable<Awaited<ReturnType<typeof updateGameNightProfile>>>
+    export type UpdateGameNightProfileMutationBody = BodyType<GameNightProfileUpdate>
+    export type UpdateGameNightProfileMutationError = ErrorType<void>
+    export type UpdateGameNightProfileMutationVariables = {gameNightId: string;profileId: string;data: BodyType<GameNightProfileUpdate>}
+
+    /**
+ * @summary Rename or archive a Game Night family profile
+ */
+export const useUpdateGameNightProfile = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameNightProfile>>, TError,UpdateGameNightProfileMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGameNightProfile>>,
+        TError,
+        UpdateGameNightProfileMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGameNightProfileMutationOptions(options));
+    }
+
+export const getSaveGameNightHouseRulesUrl = (gameNightId: string,
+    gameSlug: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/house-rules/${gameSlug}`
+}
+
+/**
+ * @summary Set house rules and an article-specific rules version
+ */
+export const saveGameNightHouseRules = async (gameNightId: string,
+    gameSlug: string,
+    gameNightHouseRulesInput: GameNightHouseRulesInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightHouseRules> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightHouseRules>(getSaveGameNightHouseRulesUrl(gameNightId,gameSlug),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightHouseRulesInput)
+  }
+);}
+
+
+
+
+
+export const getSaveGameNightHouseRulesMutationKey = () => ['saveGameNightHouseRules'] as const;
+
+export const getSaveGameNightHouseRulesMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGameNightHouseRules>>, TError,SaveGameNightHouseRulesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveGameNightHouseRules>>, TError,SaveGameNightHouseRulesMutationVariables, TContext> => {
+
+const mutationKey = getSaveGameNightHouseRulesMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveGameNightHouseRules>>, SaveGameNightHouseRulesMutationVariables> = (props) => {
+          const {gameNightId,gameSlug,data} = props ?? {};
+
+          return  saveGameNightHouseRules(gameNightId,gameSlug,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveGameNightHouseRulesMutationResult = NonNullable<Awaited<ReturnType<typeof saveGameNightHouseRules>>>
+    export type SaveGameNightHouseRulesMutationBody = BodyType<GameNightHouseRulesInput>
+    export type SaveGameNightHouseRulesMutationError = ErrorType<void>
+    export type SaveGameNightHouseRulesMutationVariables = {gameNightId: string;gameSlug: string;data: BodyType<GameNightHouseRulesInput>}
+
+    /**
+ * @summary Set house rules and an article-specific rules version
+ */
+export const useSaveGameNightHouseRules = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGameNightHouseRules>>, TError,SaveGameNightHouseRulesMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveGameNightHouseRules>>,
+        TError,
+        SaveGameNightHouseRulesMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveGameNightHouseRulesMutationOptions(options));
+    }
+
+export const getCreateGameNightLocalGameUrl = (gameNightId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/local-games`
+}
+
+/**
+ * @summary Create a Game Night-only local game
+ */
+export const createGameNightLocalGame = async (gameNightId: string,
+    gameNightLocalGameInput: GameNightLocalGameInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightLocalGame> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightLocalGame>(getCreateGameNightLocalGameUrl(gameNightId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightLocalGameInput)
+  }
+);}
+
+
+
+
+
+export const getCreateGameNightLocalGameMutationKey = () => ['createGameNightLocalGame'] as const;
+
+export const getCreateGameNightLocalGameMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGameNightLocalGame>>, TError,CreateGameNightLocalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createGameNightLocalGame>>, TError,CreateGameNightLocalGameMutationVariables, TContext> => {
+
+const mutationKey = getCreateGameNightLocalGameMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createGameNightLocalGame>>, CreateGameNightLocalGameMutationVariables> = (props) => {
+          const {gameNightId,data} = props ?? {};
+
+          return  createGameNightLocalGame(gameNightId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateGameNightLocalGameMutationResult = NonNullable<Awaited<ReturnType<typeof createGameNightLocalGame>>>
+    export type CreateGameNightLocalGameMutationBody = BodyType<GameNightLocalGameInput>
+    export type CreateGameNightLocalGameMutationError = ErrorType<void>
+    export type CreateGameNightLocalGameMutationVariables = {gameNightId: string;data: BodyType<GameNightLocalGameInput>}
+
+    /**
+ * @summary Create a Game Night-only local game
+ */
+export const useCreateGameNightLocalGame = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createGameNightLocalGame>>, TError,CreateGameNightLocalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createGameNightLocalGame>>,
+        TError,
+        CreateGameNightLocalGameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateGameNightLocalGameMutationOptions(options));
+    }
+
+export const getUpdateGameNightLocalGameUrl = (gameNightId: string,
+    localGameId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/local-games/${localGameId}`
+}
+
+/**
+ * @summary Edit a Game Night-only local game
+ */
+export const updateGameNightLocalGame = async (gameNightId: string,
+    localGameId: string,
+    gameNightLocalGameInput: GameNightLocalGameInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightLocalGame> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightLocalGame>(getUpdateGameNightLocalGameUrl(gameNightId,localGameId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightLocalGameInput)
+  }
+);}
+
+
+
+
+
+export const getUpdateGameNightLocalGameMutationKey = () => ['updateGameNightLocalGame'] as const;
+
+export const getUpdateGameNightLocalGameMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameNightLocalGame>>, TError,UpdateGameNightLocalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateGameNightLocalGame>>, TError,UpdateGameNightLocalGameMutationVariables, TContext> => {
+
+const mutationKey = getUpdateGameNightLocalGameMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateGameNightLocalGame>>, UpdateGameNightLocalGameMutationVariables> = (props) => {
+          const {gameNightId,localGameId,data} = props ?? {};
+
+          return  updateGameNightLocalGame(gameNightId,localGameId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateGameNightLocalGameMutationResult = NonNullable<Awaited<ReturnType<typeof updateGameNightLocalGame>>>
+    export type UpdateGameNightLocalGameMutationBody = BodyType<GameNightLocalGameInput>
+    export type UpdateGameNightLocalGameMutationError = ErrorType<void>
+    export type UpdateGameNightLocalGameMutationVariables = {gameNightId: string;localGameId: string;data: BodyType<GameNightLocalGameInput>}
+
+    /**
+ * @summary Edit a Game Night-only local game
+ */
+export const useUpdateGameNightLocalGame = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateGameNightLocalGame>>, TError,UpdateGameNightLocalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateGameNightLocalGame>>,
+        TError,
+        UpdateGameNightLocalGameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateGameNightLocalGameMutationOptions(options));
+    }
+
+export const getDeleteGameNightLocalGameUrl = (gameNightId: string,
+    localGameId: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/local-games/${localGameId}`
+}
+
+/**
+ * @summary Remove a local game from a Game Night
+ */
+export const deleteGameNightLocalGame = async (gameNightId: string,
+    localGameId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteGameNightLocalGameUrl(gameNightId,localGameId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteGameNightLocalGameMutationKey = () => ['deleteGameNightLocalGame'] as const;
+
+export const getDeleteGameNightLocalGameMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGameNightLocalGame>>, TError,DeleteGameNightLocalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteGameNightLocalGame>>, TError,DeleteGameNightLocalGameMutationVariables, TContext> => {
+
+const mutationKey = getDeleteGameNightLocalGameMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteGameNightLocalGame>>, DeleteGameNightLocalGameMutationVariables> = (props) => {
+          const {gameNightId,localGameId} = props ?? {};
+
+          return  deleteGameNightLocalGame(gameNightId,localGameId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteGameNightLocalGameMutationResult = NonNullable<Awaited<ReturnType<typeof deleteGameNightLocalGame>>>
+
+    export type DeleteGameNightLocalGameMutationError = ErrorType<void>
+    export type DeleteGameNightLocalGameMutationVariables = {gameNightId: string;localGameId: string}
+
+    /**
+ * @summary Remove a local game from a Game Night
+ */
+export const useDeleteGameNightLocalGame = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteGameNightLocalGame>>, TError,DeleteGameNightLocalGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteGameNightLocalGame>>,
+        TError,
+        DeleteGameNightLocalGameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteGameNightLocalGameMutationOptions(options));
+    }
+
 export const getStartGameSessionUrl = (gameSlug: string,) => {
 
 
@@ -2226,6 +3279,175 @@ export function useGetGameLeaderboard<TData = Awaited<ReturnType<typeof getGameL
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetGameLeaderboardQueryOptions(gameSlug,modeId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetGlobalGameLeaderboardUrl = (gameSlug: string,
+    modeId: string,) => {
+
+
+
+
+  return `/api/games/${gameSlug}/modes/${modeId}/leaderboard/global`
+}
+
+/**
+ * @summary Get the global family-profile leaderboard
+ */
+export const getGlobalGameLeaderboard = async (gameSlug: string,
+    modeId: string, options?: Parameters<typeof customFetch>[1]): Promise<Leaderboard> => {
+
+  return customFetch<Leaderboard>(getGetGlobalGameLeaderboardUrl(gameSlug,modeId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetGlobalGameLeaderboardQueryKey = (gameSlug: string,
+    modeId: string,) => {
+    return [
+    `/api/games/${gameSlug}/modes/${modeId}/leaderboard/global`
+    ] as const;
+    }
+
+
+export const getGetGlobalGameLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getGlobalGameLeaderboard>>, TError = ErrorType<void>>(gameSlug: string,
+    modeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGlobalGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetGlobalGameLeaderboardQueryKey(gameSlug,modeId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getGlobalGameLeaderboard>>> = ({ signal }) => getGlobalGameLeaderboard(gameSlug,modeId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: gameSlug !== null && gameSlug !== undefined && modeId !== null && modeId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getGlobalGameLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetGlobalGameLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getGlobalGameLeaderboard>>>
+export type GetGlobalGameLeaderboardQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the global family-profile leaderboard
+ */
+
+export function useGetGlobalGameLeaderboard<TData = Awaited<ReturnType<typeof getGlobalGameLeaderboard>>, TError = ErrorType<void>>(
+ gameSlug: string,
+    modeId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getGlobalGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetGlobalGameLeaderboardQueryOptions(gameSlug,modeId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetFamilyGameLeaderboardUrl = (gameSlug: string,
+    modeId: string,
+    gameNightId: string,) => {
+
+
+
+
+  return `/api/games/${gameSlug}/modes/${modeId}/leaderboard/family/${gameNightId}`
+}
+
+/**
+ * @summary Get the current Game Night family leaderboard
+ */
+export const getFamilyGameLeaderboard = async (gameSlug: string,
+    modeId: string,
+    gameNightId: string, options?: Parameters<typeof customFetch>[1]): Promise<Leaderboard> => {
+
+  return customFetch<Leaderboard>(getGetFamilyGameLeaderboardUrl(gameSlug,modeId,gameNightId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFamilyGameLeaderboardQueryKey = (gameSlug: string,
+    modeId: string,
+    gameNightId: string,) => {
+    return [
+    `/api/games/${gameSlug}/modes/${modeId}/leaderboard/family/${gameNightId}`
+    ] as const;
+    }
+
+
+export const getGetFamilyGameLeaderboardQueryOptions = <TData = Awaited<ReturnType<typeof getFamilyGameLeaderboard>>, TError = ErrorType<void>>(gameSlug: string,
+    modeId: string,
+    gameNightId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFamilyGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFamilyGameLeaderboardQueryKey(gameSlug,modeId,gameNightId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFamilyGameLeaderboard>>> = ({ signal }) => getFamilyGameLeaderboard(gameSlug,modeId,gameNightId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: gameSlug !== null && gameSlug !== undefined && modeId !== null && modeId !== undefined && gameNightId !== null && gameNightId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFamilyGameLeaderboard>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFamilyGameLeaderboardQueryResult = NonNullable<Awaited<ReturnType<typeof getFamilyGameLeaderboard>>>
+export type GetFamilyGameLeaderboardQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get the current Game Night family leaderboard
+ */
+
+export function useGetFamilyGameLeaderboard<TData = Awaited<ReturnType<typeof getFamilyGameLeaderboard>>, TError = ErrorType<void>>(
+ gameSlug: string,
+    modeId: string,
+    gameNightId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFamilyGameLeaderboard>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFamilyGameLeaderboardQueryOptions(gameSlug,modeId,gameNightId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

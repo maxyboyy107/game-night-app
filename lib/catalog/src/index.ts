@@ -9,8 +9,9 @@ export type GameCategory = {
 export type ScorekeeperMode = {
   id: string;
   name: string;
-  strategy: 'points' | 'winner';
+  strategy: 'points' | 'winner' | 'first_to';
   direction?: 'highest' | 'lowest';
+  targetScore?: number;
 };
 
 export type Game = {
@@ -223,6 +224,31 @@ function isGame(value: unknown): value is Game {
   return Boolean(value && typeof value === 'object' && typeof (value as Game).slug === 'string' && typeof (value as Game).title === 'string');
 }
 
+function normalizeScorekeeperModes(value: unknown): ScorekeeperMode[] {
+  const modes = Array.isArray(value)
+    ? value.filter((mode): mode is ScorekeeperMode => Boolean(
+      mode
+      && typeof mode === 'object'
+      && typeof (mode as ScorekeeperMode).id === 'string'
+      && typeof (mode as ScorekeeperMode).name === 'string'
+      && ['points', 'winner', 'first_to'].includes((mode as ScorekeeperMode).strategy),
+    )).map((mode) => {
+      if (mode.strategy === 'points') {
+        return { id: mode.id, name: mode.name, strategy: mode.strategy, direction: mode.direction === 'lowest' ? 'lowest' : 'highest' } satisfies ScorekeeperMode;
+      }
+      if (mode.strategy === 'first_to') {
+        const targetScore = Number.isInteger(mode.targetScore) && Number(mode.targetScore) > 0 ? Number(mode.targetScore) : 10;
+        return { id: mode.id, name: mode.name, strategy: mode.strategy, targetScore } satisfies ScorekeeperMode;
+      }
+      return { id: mode.id, name: mode.name, strategy: mode.strategy } satisfies ScorekeeperMode;
+    })
+    : [];
+  return modes.length ? modes : [
+    { id: 'points', name: 'Points game', strategy: 'points', direction: 'highest' },
+    { id: 'winner', name: 'Who won?', strategy: 'winner' },
+  ];
+}
+
 export function normalizeCatalog(value: unknown): CatalogState {
   const seed = createSeedCatalog();
   if (!value || typeof value !== 'object') return seed;
@@ -242,19 +268,7 @@ export function normalizeCatalog(value: unknown): CatalogState {
     categorySlugs: Array.isArray(game.categorySlugs) ? game.categorySlugs.filter((category): category is string => typeof category === 'string' && Boolean(safeCategories[category])) : [],
     equipment: Array.isArray(game.equipment) ? game.equipment.filter((item): item is string => typeof item === 'string') : [],
     rules: Array.isArray(game.rules) ? game.rules.filter((rule): rule is string => typeof rule === 'string') : [],
-    scorekeeperModes: Array.isArray(game.scorekeeperModes) && game.scorekeeperModes.length
-      ? game.scorekeeperModes
-        .filter((mode): mode is ScorekeeperMode => Boolean(mode && typeof mode.id === 'string' && typeof mode.name === 'string' && (mode.strategy === 'points' || mode.strategy === 'winner')))
-        .map((mode): ScorekeeperMode => {
-          if (mode.strategy === 'points') {
-            return { id: mode.id, name: mode.name, strategy: mode.strategy, direction: mode.direction === 'lowest' ? 'lowest' : 'highest' };
-          }
-          return { id: mode.id, name: mode.name, strategy: mode.strategy };
-        })
-      : [
-        { id: 'points', name: 'Points game', strategy: 'points' as const, direction: 'highest' as const },
-        { id: 'winner', name: 'Who won?', strategy: 'winner' as const },
-      ],
+    scorekeeperModes: normalizeScorekeeperModes(game.scorekeeperModes),
     variations: Array.isArray(game.variations) ? game.variations.filter((variation): variation is string => typeof variation === 'string' && variation.trim().length > 0) : [],
   })) : seed.games;
   const safePrimary = Array.isArray(candidate.primaryCategories) ? candidate.primaryCategories.filter((slug): slug is string => typeof slug === 'string' && Boolean(safeCategories[slug])) : seed.primaryCategories.filter((slug) => Boolean(safeCategories[slug]));
