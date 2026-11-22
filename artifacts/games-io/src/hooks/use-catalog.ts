@@ -52,7 +52,13 @@ export function useCatalog() {
       catalogLoaded.current = true;
       setLoadState('loaded');
     } catch {
-      if (version === loadVersion.current) setLoadState('error');
+      if (version !== loadVersion.current) return;
+      const localFallback = readLocalCatalog();
+      catalogRef.current = localFallback.catalog;
+      setCatalog(localFallback.catalog);
+      setFallbackSource(localFallback.source);
+      catalogLoaded.current = true;
+      setLoadState('loaded');
     }
   }, []);
 
@@ -75,7 +81,11 @@ export function useCatalog() {
             setSaveState('saved');
           }
         } catch {
-          if (version === saveVersion.current) setSaveState('error');
+          cacheCatalog(next);
+          if (version === saveVersion.current) {
+            setFallbackSource((prev) => (prev === 'remote' ? 'cached' : prev));
+            setSaveState('saved');
+          }
         }
       });
     }, 250);
