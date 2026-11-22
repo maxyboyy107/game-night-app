@@ -33,6 +33,8 @@ import type {
   FavoriteUpdate,
   GameNightCreateInput,
   GameNightDetail,
+  GameNightGameInput,
+  GameNightGameSelection,
   GameNightHouseRules,
   GameNightHouseRulesInput,
   GameNightInviteInput,
@@ -2789,6 +2791,173 @@ export const useDeleteGameNightLocalGame = <TError = ErrorType<void>,
         TContext
       > => {
       return useMutation(getDeleteGameNightLocalGameMutationOptions(options));
+    }
+
+export const getSaveGameNightGameUrl = (gameNightId: string,
+    gameSlug: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/games/${gameSlug}`
+}
+
+/**
+ * @summary Add or update a game and its nested variations
+ */
+export const saveGameNightGame = async (gameNightId: string,
+    gameSlug: string,
+    gameNightGameInput: GameNightGameInput, options?: Parameters<typeof customFetch>[1]): Promise<GameNightGameSelection> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<GameNightGameSelection>(getSaveGameNightGameUrl(gameNightId,gameSlug),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gameNightGameInput)
+  }
+);}
+
+
+
+
+
+export const getSaveGameNightGameMutationKey = () => ['saveGameNightGame'] as const;
+
+export const getSaveGameNightGameMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGameNightGame>>, TError,SaveGameNightGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveGameNightGame>>, TError,SaveGameNightGameMutationVariables, TContext> => {
+
+const mutationKey = getSaveGameNightGameMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveGameNightGame>>, SaveGameNightGameMutationVariables> = (props) => {
+          const {gameNightId,gameSlug,data} = props ?? {};
+
+          return  saveGameNightGame(gameNightId,gameSlug,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveGameNightGameMutationResult = NonNullable<Awaited<ReturnType<typeof saveGameNightGame>>>
+    export type SaveGameNightGameMutationBody = BodyType<GameNightGameInput>
+    export type SaveGameNightGameMutationError = ErrorType<void>
+    export type SaveGameNightGameMutationVariables = {gameNightId: string;gameSlug: string;data: BodyType<GameNightGameInput>}
+
+    /**
+ * @summary Add or update a game and its nested variations
+ */
+export const useSaveGameNightGame = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveGameNightGame>>, TError,SaveGameNightGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveGameNightGame>>,
+        TError,
+        SaveGameNightGameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSaveGameNightGameMutationOptions(options));
+    }
+
+export const getRemoveGameNightGameUrl = (gameNightId: string,
+    gameSlug: string,) => {
+
+
+
+
+  return `/api/game-nights/${gameNightId}/games/${gameSlug}`
+}
+
+/**
+ * @summary Remove a game from the Game Night navigation
+ */
+export const removeGameNightGame = async (gameNightId: string,
+    gameSlug: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRemoveGameNightGameUrl(gameNightId,gameSlug),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveGameNightGameMutationKey = () => ['removeGameNightGame'] as const;
+
+export const getRemoveGameNightGameMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeGameNightGame>>, TError,RemoveGameNightGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeGameNightGame>>, TError,RemoveGameNightGameMutationVariables, TContext> => {
+
+const mutationKey = getRemoveGameNightGameMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeGameNightGame>>, RemoveGameNightGameMutationVariables> = (props) => {
+          const {gameNightId,gameSlug} = props ?? {};
+
+          return  removeGameNightGame(gameNightId,gameSlug,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveGameNightGameMutationResult = NonNullable<Awaited<ReturnType<typeof removeGameNightGame>>>
+
+    export type RemoveGameNightGameMutationError = ErrorType<void>
+    export type RemoveGameNightGameMutationVariables = {gameNightId: string;gameSlug: string}
+
+    /**
+ * @summary Remove a game from the Game Night navigation
+ */
+export const useRemoveGameNightGame = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeGameNightGame>>, TError,RemoveGameNightGameMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeGameNightGame>>,
+        TError,
+        RemoveGameNightGameMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveGameNightGameMutationOptions(options));
     }
 
 export const getStartGameSessionUrl = (gameSlug: string,) => {

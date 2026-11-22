@@ -5,6 +5,7 @@ import {
   db,
   familyMembersTable,
   gameFavoritesTable,
+  gameNightGamesTable,
   gameNightLocalGamesTable,
   gameNightMembershipsTable,
   gameNightProfilesTable,
@@ -12,6 +13,7 @@ import {
   gameSessionsTable,
   userProfilesTable,
   type SessionPlayerScore,
+  type GameNightVariationNode,
 } from "@workspace/db";
 import type { Game, ScorekeeperMode } from "@workspace/catalog";
 import {
@@ -270,6 +272,33 @@ async function gameAndMode(gameSlug: string, modeId: string, gameNightId?: strin
   return null;
 }
 
+function flattenVariationPaths(nodes: GameNightVariationNode[], prefix = ""): string[] {
+  return nodes.flatMap((node) => {
+    const path = prefix ? `${prefix} / ${node.name}` : node.name;
+    return [path, ...flattenVariationPaths(node.children || [], path)];
+  });
+}
+
+async function validateGameNightGame(gameNightId: string, gameSlug: string, localGameId?: string): Promise<boolean> {
+  if (localGameId) return true;
+  const [selection] = await db.select({ id: gameNightGamesTable.id }).from(gameNightGamesTable).where(and(
+    eq(gameNightGamesTable.gameNightId, gameNightId),
+    eq(gameNightGamesTable.gameSlug, gameSlug),
+  ));
+  return Boolean(selection);
+}
+
+async function isAllowedVariation(gameNightId: string | null | undefined, gameSlug: string, variation: string | null | undefined, available: string[] = []): Promise<boolean> {
+  if (!variation) return true;
+  if (available.includes(variation)) return true;
+  if (!gameNightId) return false;
+  const [selection] = await db.select().from(gameNightGamesTable).where(and(
+    eq(gameNightGamesTable.gameNightId, gameNightId),
+    eq(gameNightGamesTable.gameSlug, gameSlug),
+  ));
+  return Boolean(selection && flattenVariationPaths(selection.variationTree).includes(variation));
+}
+
 async function sessionResponse(row: typeof gameSessionsTable.$inferSelect, titles: Record<string, string>) {
   const strategy: ScorekeeperMode["strategy"] = row.scorekeeperStrategy === "winner"
     ? "winner"
@@ -480,6 +509,10 @@ router.post("/profile/games", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Game or scorekeeper mode not found." });
     return;
   }
+  if (body.data.gameNightId && !await validateGameNightGame(body.data.gameNightId, configured.game.slug, configured.localGameId)) {
+    res.status(400).json({ error: "The host has not added this game to the Game Night yet." });
+    return;
+  }
   const { game, mode } = configured;
   const proposedPlayers: SessionPlayerScore[] = body.data.players.map((player) => ({
     name: player.name,
@@ -495,7 +528,7 @@ router.post("/profile/games", async (req, res): Promise<void> => {
       : "Enter a whole-number score for each of the 2–8 players." });
     return;
   }
-  if (body.data.variation && !game.variations?.includes(body.data.variation)) {
+  if (!await isAllowedVariation(body.data.gameNightId, game.slug, body.data.variation, game.variations)) {
     res.status(400).json({ error: "Choose a variation listed for this game." });
     return;
   }
@@ -743,6 +776,10 @@ router.post("/games/:gameSlug/sessions", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Game not found." });
     return;
   }
+  if (!await validateGameNightGame(body.data.gameNightId, configured.game.slug, configured.localGameId)) {
+    res.status(403).json({ error: "The host has not added this game to the Game Night yet." });
+    return;
+  }
   const { game, mode } = configured;
   const proposedPlayers: SessionPlayerScore[] = body.data.players.map((player) => ({
     ...player,
@@ -753,7 +790,7 @@ router.post("/games/:gameSlug/sessions", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Add 2–8 players, including yourself exactly once." });
     return;
   }
-  if (body.data.variation && !game.variations?.includes(body.data.variation)) {
+  if (!await isAllowedVariation(body.data.gameNightId, game.slug, body.data.variation, game.variations)) {
     res.status(400).json({ error: "Choose a variation listed for this game." });
     return;
   }
@@ -910,6 +947,10 @@ router.put("/games/sessions/:sessionId", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Game or scorekeeper mode not found." });
     return;
   }
+  if (existing.gameNightId && !await validateGameNightGame(existing.gameNightId, configured.game.slug, configured.localGameId)) {
+    res.status(400).json({ error: "The host has not added this game to the Game Night yet." });
+    return;
+  }
   const { game, mode } = configured;
   const proposedPlayers: SessionPlayerScore[] = body.data.players.map((player) => ({
     name: player.name,
@@ -925,7 +966,7 @@ router.put("/games/sessions/:sessionId", async (req, res): Promise<void> => {
       : "Enter a whole-number score for each of the 2–8 players." });
     return;
   }
-  if (body.data.variation && !game.variations?.includes(body.data.variation)) {
+  if (!await isAllowedVariation(existing.gameNightId, game.slug, body.data.variation, game.variations)) {
     res.status(400).json({ error: "Choose a variation listed for this game." });
     return;
   }

@@ -9,11 +9,13 @@ import {
   deleteGameNightLocalGame,
   inviteToGameNight,
   joinGameNight,
+  removeGameNightGame,
   saveGameNightHouseRules,
+  saveGameNightGame,
   updateGameNightMembership,
   updateGameNightProfile,
 } from '@workspace/api-client-react';
-import type { GameNightLocalGame, GameNightProfile, ScorekeeperMode } from '@workspace/api-client-react';
+import type { GameNightLocalGame, GameNightProfile, GameNightVariationNode, ScorekeeperMode } from '@workspace/api-client-react';
 import type { Game, InventoryItem } from '../data/catalog';
 import { useGameNight } from '../contexts/GameNightContext';
 import { localGameToGuide } from '../lib/gameNightGame';
@@ -64,6 +66,11 @@ export function GameNightsPage({
   const [localModeStrategy, setLocalModeStrategy] = useState<'points' | 'winner' | 'first_to'>('points');
   const [localModeDirection, setLocalModeDirection] = useState<'highest' | 'lowest'>('highest');
   const [localTargetScore, setLocalTargetScore] = useState(10);
+  const [curatedGameSlug, setCuratedGameSlug] = useState('');
+  const [variationTree, setVariationTree] = useState<GameNightVariationNode[]>([]);
+  const [newVariationRoot, setNewVariationRoot] = useState('');
+  const [newVariationChild, setNewVariationChild] = useState('');
+  const [variationParentIndex, setVariationParentIndex] = useState(0);
   const [ruleGameSlug, setRuleGameSlug] = useState('');
   const [houseRulesText, setHouseRulesText] = useState('');
   const [houseVariation, setHouseVariation] = useState('');
@@ -99,10 +106,22 @@ export function GameNightsPage({
   const pastGame = allGameOptions.find((game) => game.slug === pastGameSlug);
   const pastMode = pastGame?.scorekeeperModes?.find((mode) => mode.id === pastModeId) || pastGame?.scorekeeperModes?.[0];
   const houseRuleGames = allGameOptions;
+  const curatedGame = allGameOptions.find((game) => game.slug === curatedGameSlug);
 
   useEffect(() => {
     if (!ruleGameSlug && houseRuleGames.length) setRuleGameSlug(houseRuleGames[0].slug);
   }, [houseRuleGames, ruleGameSlug]);
+
+  useEffect(() => {
+    if (!curatedGameSlug && allGameOptions.length) setCuratedGameSlug(allGameOptions[0].slug);
+  }, [allGameOptions, curatedGameSlug]);
+
+  useEffect(() => {
+    if (!curatedGame) return;
+    const saved = current?.selectedGames.find((item) => item.gameSlug === curatedGame.slug);
+    setVariationTree(saved?.variationTree || curatedGame.variations?.map((name) => ({ name, children: [] })) || []);
+    setVariationParentIndex(0);
+  }, [current?.night.id, current?.selectedGames, curatedGame]);
 
   useEffect(() => {
     const saved = current?.houseRules.find((rule) => rule.gameSlug === ruleGameSlug);
@@ -221,10 +240,39 @@ export function GameNightsPage({
     await refreshGameNights(current.night.id);
   }, 'House rules and rules version saved.');
 
+  const saveCuratedGame = () => current && curatedGame && runAction(async () => {
+    await saveGameNightGame(current.night.id, curatedGame.slug, { variationTree });
+    await refreshGameNights(current.night.id);
+  }, `${curatedGame.title} added to this Game Night.`);
+
+  const removeCuratedGame = (slug: string) => current && runAction(async () => {
+    await removeGameNightGame(current.night.id, slug);
+    await refreshGameNights(current.night.id);
+  }, 'Game removed from this Game Night.');
+
+  const addVariationRoot = () => {
+    const value = newVariationRoot.trim();
+    if (!value || variationTree.some((node) => node.name.toLowerCase() === value.toLowerCase())) return;
+    setVariationTree((nodes) => [...nodes, { name: value, children: [] }]);
+    setNewVariationRoot('');
+    setVariationParentIndex(variationTree.length);
+  };
+
+  const addVariationChild = () => {
+    const value = newVariationChild.trim();
+    const parent = variationTree[variationParentIndex];
+    if (!value || !parent || parent.children.some((node) => node.name.toLowerCase() === value.toLowerCase())) return;
+    setVariationTree((nodes) => nodes.map((node, index) => index === variationParentIndex
+      ? { ...node, children: [...node.children, { name: value, children: [] }] }
+      : node));
+    setNewVariationChild('');
+  };
+
   const eligibleGames = useMemo(() => {
     if (!current || !playingProfileIds.length) return [];
     const count = playingProfileIds.length;
-    const global = games.filter((game) => (inventory[game.slug] || []).length > 0 && gamePlayerCountFits(game.players, count));
+    const selectedSlugs = new Set(current.selectedGames.map((game) => game.gameSlug));
+    const global = games.filter((game) => selectedSlugs.has(game.slug) && (inventory[game.slug] || []).length > 0 && gamePlayerCountFits(game.players, count));
     const local = localGames.filter((game) => count >= game.minPlayers && count <= game.maxPlayers).map(localGameToGuide);
     return [...global, ...local];
   }, [current, games, inventory, localGames, playingProfileIds]);
@@ -310,6 +358,8 @@ export function GameNightsPage({
 
       <section className="rounded-2xl border border-white/[0.08] bg-[#171821]/70 p-5"><div className="flex items-center gap-2"><Shield size={17} className="text-[#f9be4b]" /><h2 className="text-xl font-semibold">Members</h2></div><div className="mt-4 space-y-2">{current.members.map((member) => <div key={member.id} className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-[#12131a] p-3"><span className="min-w-0 flex-1 truncate text-sm font-semibold">{member.username}</span><span className="text-[10px] uppercase text-[#777984]">{member.role} · {member.status}</span>{isHost && member.status === 'pending' && <><button type="button" disabled={busy} onClick={() => void respondToRequest(member.id, 'accept')} className="rounded-lg bg-[#f9be4b] px-2 py-1.5 text-xs font-bold text-[#171821]">Accept</button><button type="button" disabled={busy} onClick={() => void respondToRequest(member.id, 'deny')} className="rounded-lg border border-white/10 px-2 py-1.5 text-xs text-[#a2a2ae]">Deny</button></>}{isHost && member.role !== 'host' && member.status === 'active' && <button type="button" disabled={busy} onClick={() => void respondToRequest(member.id, 'remove')} className="rounded-lg border border-white/10 p-2 text-[#898997] hover:text-[#ff9b90]" aria-label={`Remove ${member.username}`}><Trash2 size={13} /></button>}</div>)}</div>{isHost && current.night.accessMode === 'private' && <form className="mt-4 flex gap-2" onSubmit={(event) => { event.preventDefault(); void inviteMember(); }}><input value={inviteUsername} onChange={(event) => setInviteUsername(event.target.value)} maxLength={20} placeholder="Account username" className="h-10 min-w-0 flex-1 rounded-lg border border-white/10 bg-[#12131a] px-3 text-sm outline-none focus:border-[#f9be4b]/50" /><button type="submit" disabled={busy || !inviteUsername.trim()} className="rounded-lg border border-[#42d1b1]/30 px-3 text-xs font-bold text-[#42d1b1] disabled:opacity-50">Invite</button></form>}{isHost && current.night.accessMode !== 'private' && <p className="mt-4 text-xs text-[#898997]">Share the four-letter code. {current.night.accessMode === 'invitational' ? 'Requests appear here for your approval.' : 'Public access is immediate.'}</p>}</section>
     </div>
+
+    {isHost && <section className="mt-6 rounded-2xl border border-white/[0.08] bg-[#171821]/70 p-5" data-testid="panel-game-night-library"><div className="flex items-center gap-2"><Gamepad2 size={17} className="text-[#42d1b1]" /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#42d1b1]">Host panel</p><h2 className="mt-1 text-2xl font-semibold tracking-[-0.05em]">Choose this Game Night’s games</h2></div></div><p className="mt-2 text-sm leading-6 text-[#898997]">Your group starts with an empty article shelf. Add only the guides you want members to see, then organize their variations and child variations.</p><label className="mt-4 block text-[10px] font-bold uppercase tracking-[0.13em] text-[#898997]">Article or local game<select value={curatedGameSlug} onChange={(event) => setCuratedGameSlug(event.target.value)} className="admin-input mt-2">{allGameOptions.map((game) => <option key={game.slug} value={game.slug}>{game.title}</option>)}</select></label>{curatedGame && <div className="mt-4 rounded-xl border border-white/[0.08] bg-[#12131a] p-4"><p className="text-sm font-semibold">{curatedGame.title}</p><p className="mt-1 text-xs text-[#898997]">Top-level variations can contain child variations, such as “Local → Normal”.</p><div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]"><input value={newVariationRoot} onChange={(event) => setNewVariationRoot(event.target.value)} maxLength={120} placeholder="Add a main variation" className="admin-input" /><button type="button" onClick={addVariationRoot} disabled={!newVariationRoot.trim()} className="rounded-lg border border-white/10 px-3 text-xs font-semibold text-[#a2a2ae] disabled:opacity-40">Add main</button></div>{variationTree.length > 0 && <><label className="mt-4 block text-[10px] font-bold uppercase tracking-[0.13em] text-[#898997]">Add a child under<select value={variationParentIndex} onChange={(event) => setVariationParentIndex(Number(event.target.value))} className="admin-input mt-2">{variationTree.map((node, index) => <option key={`${node.name}-${index}`} value={index}>{node.name}</option>)}</select></label><div className="mt-2 grid gap-2 sm:grid-cols-[1fr_auto]"><input value={newVariationChild} onChange={(event) => setNewVariationChild(event.target.value)} maxLength={120} placeholder="Child variation" className="admin-input" /><button type="button" onClick={addVariationChild} disabled={!newVariationChild.trim()} className="rounded-lg border border-[#42d1b1]/30 px-3 text-xs font-semibold text-[#42d1b1] disabled:opacity-40">Add child</button></div></>}<div className="mt-4 space-y-2">{variationTree.map((node, rootIndex) => <div key={`${node.name}-${rootIndex}`} className="rounded-lg border border-white/[0.07] bg-[#171821] p-3"><div className="flex items-center gap-2"><span className="min-w-0 flex-1 text-sm font-semibold">{node.name}</span><button type="button" onClick={() => setVariationTree((items) => items.filter((_, index) => index !== rootIndex))} className="text-xs text-[#898997] hover:text-[#ff9b90]">Remove</button></div>{node.children.map((child, childIndex) => <div key={`${child.name}-${childIndex}`} className="ml-4 mt-2 flex items-center gap-2 border-l border-[#42d1b1]/30 pl-3 text-xs text-[#a2a2ae]"><span className="min-w-0 flex-1">{child.name}</span><button type="button" onClick={() => setVariationTree((items) => items.map((item, index) => index === rootIndex ? { ...item, children: item.children.filter((_, childPosition) => childPosition !== childIndex) } : item))} className="text-[#777984] hover:text-[#ff9b90]">Remove</button></div>)}</div>)}</div><button type="button" disabled={busy || !curatedGame} onClick={() => void saveCuratedGame()} className="mt-4 rounded-xl bg-[#f9be4b] px-4 py-2.5 text-xs font-bold text-[#171821] disabled:opacity-50">Save game and variations</button></div>}<div className="mt-5 border-t border-white/[0.08] pt-4"><p className="text-xs font-bold uppercase tracking-[0.14em] text-[#777984]">Games in this group</p>{current.selectedGames.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">{current.selectedGames.map((game) => <div key={game.gameSlug} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-[#12131a] p-3"><div className="min-w-0 flex-1"><p className="text-sm font-semibold">{game.title}</p><p className="mt-1 text-xs text-[#898997]">{game.variationTree.length ? game.variationTree.map((node) => node.children.length ? `${node.name} (${node.children.map((child) => child.name).join(', ')})` : node.name).join(' · ') : 'Standard rules'}</p></div><button type="button" disabled={busy} onClick={() => void removeCuratedGame(game.gameSlug)} className="rounded-lg p-2 text-[#898997] hover:text-[#ff9b90]" aria-label={`Remove ${game.title} from Game Night`}><Trash2 size={14} /></button></div>)}</div> : <p className="mt-3 rounded-xl border border-dashed border-white/10 px-4 py-5 text-sm text-[#898997]">No articles have been added. Members will see an empty game shelf until you add one.</p>}</div></section>}
 
     <section className="mt-6 rounded-2xl border border-white/[0.08] bg-[#171821]/70 p-5"><div className="flex items-center gap-2"><Sparkles size={17} className="text-[#f9be4b]" /><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#f9be4b]">What should we play?</p><h2 className="mt-1 text-xl font-semibold">Pick from the inventory</h2></div></div><p className="mt-2 text-xs leading-5 text-[#898997]">The picker checks player count and only includes catalog games in the Inventory Bank plus your local games.</p><div className="mt-4 flex flex-wrap gap-2">{activeProfiles.map((profile) => <label key={profile.id} className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-xs ${playingProfileIds.includes(profile.id) ? 'border-[#42d1b1]/40 bg-[#42d1b1]/[0.08] text-[#42d1b1]' : 'border-white/10 text-[#a2a2ae]'}`}><input type="checkbox" checked={playingProfileIds.includes(profile.id)} onChange={(event) => setPlayingProfileIds((ids) => event.target.checked ? [...ids, profile.id] : ids.filter((id) => id !== profile.id))} className="accent-[#42d1b1]" />{profile.name}</label>)}</div>{!activeProfiles.length && <p className="mt-3 text-xs text-[#898997]">Add active family profiles to filter by who is playing.</p>}<div className="mt-4 flex flex-wrap items-center gap-3"><button type="button" disabled={!eligibleGames.length} onClick={pickGame} className="inline-flex items-center gap-2 rounded-xl bg-[#f9be4b] px-4 py-3 text-sm font-bold text-[#171821] disabled:opacity-45"><Sparkles size={15} /> Pick a game</button><span className="text-xs text-[#898997]">{eligibleGames.length} games fit {playingProfileIds.length} selected profile{playingProfileIds.length === 1 ? '' : 's'}.</span>{pickedGame && <p className="w-full rounded-xl border border-[#f9be4b]/20 bg-[#302718]/30 p-3 text-sm text-[#f9be4b]">Try <strong>{pickedGame}</strong> tonight.</p>}</div></section>
 

@@ -278,6 +278,27 @@ export interface GameNightLocalGameInput {
   variations: string[];
 }
 
+export interface GameNightVariationNode {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  name: string;
+  children: GameNightVariationNode[];
+}
+
+export interface GameNightGameSelection {
+  gameSlug: string;
+  title: string;
+  variationTree: GameNightVariationNode[];
+  addedAt: string;
+}
+
+export interface GameNightGameInput {
+  /** @maxItems 40 */
+  variationTree: GameNightVariationNode[];
+}
+
 export interface SessionPlayer {
   name: string;
   /** @nullable */
@@ -365,6 +386,7 @@ export interface GameNightDetail {
   profiles: GameNightProfile[];
   houseRules: GameNightHouseRules[];
   localGames: GameNightLocalGame[];
+  selectedGames: GameNightGameSelection[];
   timeline: GameSession[];
 }
 

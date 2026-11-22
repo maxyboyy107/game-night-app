@@ -1145,6 +1145,8 @@ export const getGameNightResponseLocalGamesItemScorekeeperModesItemNameMax = 48;
 
 export const getGameNightResponseLocalGamesItemScorekeeperModesItemTargetScoreMax = 1000000;
 
+export const getGameNightResponseSelectedGamesItemVariationTreeItemNameMax = 120;
+
 
 
 export const GetGameNightResponse = zod.object({
@@ -1192,6 +1194,15 @@ export const GetGameNightResponse = zod.object({
 })),
   "variations": zod.array(zod.string()),
   "createdAt": zod.coerce.date()
+})),
+  "selectedGames": zod.array(zod.object({
+  "gameSlug": zod.string(),
+  "title": zod.string(),
+  "variationTree": zod.array(zod.object({
+  "name": zod.string().min(1).max(getGameNightResponseSelectedGamesItemVariationTreeItemNameMax),
+  "children": zod.array(zod.unknown())
+})),
+  "addedAt": zod.coerce.date()
 })),
   "timeline": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -1511,6 +1522,53 @@ export const DeleteGameNightLocalGameParams = zod.object({
 })
 
 export const DeleteGameNightLocalGameResponse = zod.void()
+
+
+/**
+ * @summary Add or update a game and its nested variations
+ */
+export const SaveGameNightGameParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid(),
+  "gameSlug": zod.coerce.string()
+})
+
+export const saveGameNightGameBodyVariationTreeItemNameMax = 120;
+
+export const saveGameNightGameBodyVariationTreeMax = 40;
+
+
+
+export const SaveGameNightGameBody = zod.object({
+  "variationTree": zod.array(zod.object({
+  "name": zod.string().min(1).max(saveGameNightGameBodyVariationTreeItemNameMax),
+  "children": zod.array(zod.unknown())
+})).max(saveGameNightGameBodyVariationTreeMax)
+})
+
+export const saveGameNightGameResponseVariationTreeItemNameMax = 120;
+
+
+
+export const SaveGameNightGameResponse = zod.object({
+  "gameSlug": zod.string(),
+  "title": zod.string(),
+  "variationTree": zod.array(zod.object({
+  "name": zod.string().min(1).max(saveGameNightGameResponseVariationTreeItemNameMax),
+  "children": zod.array(zod.unknown())
+})),
+  "addedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Remove a game from the Game Night navigation
+ */
+export const RemoveGameNightGameParams = zod.object({
+  "gameNightId": zod.coerce.string().uuid(),
+  "gameSlug": zod.coerce.string()
+})
+
+export const RemoveGameNightGameResponse = zod.void()
 
 
 /**

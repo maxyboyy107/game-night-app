@@ -5,6 +5,7 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { GameNightGameSelection } from './gameNightGameSelection';
 import type { GameNightHouseRules } from './gameNightHouseRules';
 import type { GameNightLocalGame } from './gameNightLocalGame';
 import type { GameNightMember } from './gameNightMember';
@@ -18,5 +19,6 @@ export interface GameNightDetail {
   profiles: GameNightProfile[];
   houseRules: GameNightHouseRules[];
   localGames: GameNightLocalGame[];
+  selectedGames: GameNightGameSelection[];
   timeline: GameSession[];
 }

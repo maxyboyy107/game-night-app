@@ -2,6 +2,11 @@ import { boolean, index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, 
 import { sql } from "drizzle-orm";
 import type { ScorekeeperMode } from "@workspace/catalog";
 
+export type GameNightVariationNode = {
+  name: string;
+  children: GameNightVariationNode[];
+};
+
 export const gameNightsTable = pgTable("game_nights", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
@@ -74,4 +79,18 @@ export const gameNightLocalGamesTable = pgTable("game_night_local_games", {
 }, (table) => [
   uniqueIndex("game_night_local_games_night_slug_unique").on(table.gameNightId, table.slug),
   index("game_night_local_games_night_idx").on(table.gameNightId),
+]);
+
+export const gameNightGamesTable = pgTable("game_night_games", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  gameNightId: uuid("game_night_id").notNull().references(() => gameNightsTable.id, { onDelete: "cascade" }),
+  gameSlug: text("game_slug").notNull(),
+  title: text("title").notNull(),
+  variationTree: jsonb("variation_tree").$type<GameNightVariationNode[]>().notNull().default([]),
+  addedByUserId: text("added_by_user_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
+}, (table) => [
+  uniqueIndex("game_night_games_night_slug_unique").on(table.gameNightId, table.gameSlug),
+  index("game_night_games_night_idx").on(table.gameNightId),
 ]);

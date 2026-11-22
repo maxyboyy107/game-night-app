@@ -707,6 +707,59 @@ paths:
           description: Host access required
         "404":
           description: Local game not found
+  /game-nights/{gameNightId}/games/{gameSlug}:
+    put:
+      tags: [GameNights]
+      operationId: saveGameNightGame
+      summary: Add or update a game and its nested variations
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: gameSlug
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GameNightGameInput" }
+      responses:
+        "200":
+          description: Game added to the Game Night
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GameNightGameSelection" }
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+        "404":
+          description: Catalog or local game not found
+    delete:
+      tags: [GameNights]
+      operationId: removeGameNightGame
+      summary: Remove a game from the Game Night navigation
+      parameters:
+        - name: gameNightId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - name: gameSlug
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Game removed
+        "401":
+          description: Sign-in required
+        "403":
+          description: Host access required
+        "404":
+          description: Game selection not found
   /games/{gameSlug}/sessions:
     post:
       tags: [Community]
@@ -1041,9 +1094,35 @@ components:
           minItems: 1
           items: { $ref: "#/components/schemas/ScorekeeperMode" }
         variations: { type: array, items: { type: string, maxLength: 120 } }
+    GameNightVariationNode:
+      type: object
+      required: [name, children]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        children:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightVariationNode" }
+    GameNightGameSelection:
+      type: object
+      required: [gameSlug, title, variationTree, addedAt]
+      properties:
+        gameSlug: { type: string }
+        title: { type: string }
+        variationTree:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightVariationNode" }
+        addedAt: { type: string, format: date-time }
+    GameNightGameInput:
+      type: object
+      required: [variationTree]
+      properties:
+        variationTree:
+          type: array
+          maxItems: 40
+          items: { $ref: "#/components/schemas/GameNightVariationNode" }
     GameNightDetail:
       type: object
-      required: [night, members, profiles, houseRules, localGames, timeline]
+      required: [night, members, profiles, houseRules, localGames, selectedGames, timeline]
       properties:
         night: { $ref: "#/components/schemas/GameNightSummary" }
         members:
@@ -1058,6 +1137,9 @@ components:
         localGames:
           type: array
           items: { $ref: "#/components/schemas/GameNightLocalGame" }
+        selectedGames:
+          type: array
+          items: { $ref: "#/components/schemas/GameNightGameSelection" }
         timeline:
           type: array
           items: { $ref: "#/components/schemas/GameSession" }

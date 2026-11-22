@@ -2,12 +2,19 @@ import { useState } from 'react';
 import { ArrowRight, Plus, X } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 import { startGameSession } from '@workspace/api-client-react';
-import type { GameNightProfile } from '@workspace/api-client-react';
+import type { GameNightProfile, GameNightVariationNode } from '@workspace/api-client-react';
 import type { Game } from '../data/games';
 
 type PlayerDraft = { name: string; gameNightProfileId: string | null };
 
-export function StartGameButton({ game, signedIn, username, gameNightId, profiles }: { game: Game; signedIn: boolean; username: string; gameNightId?: string; profiles: GameNightProfile[] }) {
+function flattenVariationTree(nodes: GameNightVariationNode[], prefix = ''): string[] {
+  return nodes.flatMap((node) => {
+    const label = prefix ? `${prefix} / ${node.name}` : node.name;
+    return [label, ...flattenVariationTree(node.children, label)];
+  });
+}
+
+export function StartGameButton({ game, signedIn, username, gameNightId, profiles, variationTree }: { game: Game; signedIn: boolean; username: string; gameNightId?: string; profiles: GameNightProfile[]; variationTree: GameNightVariationNode[] }) {
   const [, setLocation] = useLocation();
   const [open, setOpen] = useState(false);
   const [accountName, setAccountName] = useState(username || 'You');
@@ -18,6 +25,7 @@ export function StartGameButton({ game, signedIn, username, gameNightId, profile
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const activeMembers = profiles.filter((member) => member.isActive);
+  const variations = variationTree.length ? flattenVariationTree(variationTree) : game.variations || [];
   const modes = game.scorekeeperModes?.length ? game.scorekeeperModes : [{ id: 'points', name: 'Points game', strategy: 'points' as const, direction: 'highest' as const }];
   const openDialog = () => {
     setModeId(modes[0].id);
@@ -56,7 +64,7 @@ export function StartGameButton({ game, signedIn, username, gameNightId, profile
         <select value={modeId} onChange={(event) => setModeId(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-[#12131a] px-3 text-sm text-[#f7f0e4] outline-none focus:border-[#f9be4b]/50" aria-label="Scorekeeper mode" data-testid="select-start-mode">
            {modes.map((mode) => <option key={mode.id} value={mode.id}>{mode.name} · {mode.strategy === 'winner' ? 'winner only' : mode.strategy === 'first_to' ? `first to ${mode.targetScore || 10}` : `${mode.direction === 'lowest' ? 'lowest' : 'highest'} points win`}</option>)}
         </select>
-        {game.variations?.length ? <label className="mt-4 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#898997]">Variation <select value={variation} onChange={(event) => setVariation(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-[#12131a] px-3 text-sm font-normal normal-case tracking-normal text-[#f7f0e4] outline-none focus:border-[#f9be4b]/50" aria-label="Game variation" data-testid="select-start-variation"><option value="">Standard rules</option>{game.variations.map((item) => <option key={item} value={item}>{item}</option>)}</select></label> : null}
+         {variations.length ? <label className="mt-4 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#898997]">Variation <select value={variation} onChange={(event) => setVariation(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-white/10 bg-[#12131a] px-3 text-sm font-normal normal-case tracking-normal text-[#f7f0e4] outline-none focus:border-[#f9be4b]/50" aria-label="Game variation" data-testid="select-start-variation"><option value="">Standard rules</option>{variations.map((item) => <option key={item} value={item}>{item}</option>)}</select></label> : null}
         <label className="mt-4 block text-[10px] font-bold uppercase tracking-[0.14em] text-[#898997]">Table note <textarea value={note} onChange={(event) => setNote(event.target.value)} maxLength={1000} placeholder="A house rule, a close call, a note for later…" className="mt-2 min-h-20 w-full resize-y rounded-lg border border-white/10 bg-[#12131a] px-3 py-2.5 text-sm font-normal normal-case tracking-normal text-[#f7f0e4] outline-none placeholder:text-[#777984] focus:border-[#f9be4b]/50" data-testid="input-start-note" /></label>
         <div className="mt-4 rounded-xl border border-[#f9be4b]/20 bg-[#302718]/35 p-3.5"><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#f9be4b]">Account holder · included once</p><p className="mt-1 text-sm font-semibold">{accountName || 'You'} <span className="ml-1 font-mono text-[10px] text-[#898997]">YOU</span></p></div>
         <div className="mt-3 space-y-2">{players.map((player, index) => {

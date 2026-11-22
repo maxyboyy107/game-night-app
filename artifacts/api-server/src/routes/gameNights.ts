@@ -4,6 +4,7 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import {
   db,
   gameNightHouseRulesTable,
+  gameNightGamesTable,
   gameNightLocalGamesTable,
   gameNightMembershipsTable,
   gameNightProfilesTable,
@@ -32,6 +33,11 @@ import {
   SaveGameNightHouseRulesBody,
   SaveGameNightHouseRulesParams,
   SaveGameNightHouseRulesResponse,
+  SaveGameNightGameBody,
+  SaveGameNightGameParams,
+  SaveGameNightGameResponse,
+  RemoveGameNightGameParams,
+  RemoveGameNightGameResponse,
   UpdateGameNightLocalGameBody,
   UpdateGameNightLocalGameParams,
   UpdateGameNightLocalGameResponse,
@@ -44,10 +50,12 @@ import {
 } from "@workspace/api-zod";
 import type { ScorekeeperMode } from "@workspace/catalog";
 import { signedInUserId } from "../lib/adminAuth";
+import { loadCatalogState } from "../lib/catalogPersistence";
 
 const router: IRouter = Router();
 const CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ";
 type AccessMode = "public" | "invitational" | "private";
+type NormalizedVariationNode = { name: string; children: NormalizedVariationNode[] };
 
 function requireUser(req: Request, res: Response): string | null {
   const userId = signedInUserId(req);
@@ -142,6 +150,26 @@ function serializeSession(row: typeof gameSessionsTable.$inferSelect) {
     source: row.source === "historical" ? "historical" : "live",
     playedAt: (row.finishedAt ?? row.startedAt).toISOString(),
   };
+}
+
+function normalizeVariationTree(value: unknown) {
+  let nodeCount = 0;
+  const normalizeNodes = (nodes: unknown, depth: number): NormalizedVariationNode[] => {
+    if (!Array.isArray(nodes) || depth > 4) throw new Error("Variation tree is invalid.");
+    const result = nodes.map((node) => {
+      nodeCount += 1;
+      if (nodeCount > 80 || !node || typeof node !== "object") throw new Error("Variation tree is too large.");
+      const candidate = node as { name?: unknown; children?: unknown };
+      if (typeof candidate.name !== "string" || !candidate.name.trim() || candidate.name.trim().length > 120) {
+        throw new Error("Variation names must be between 1 and 120 characters.");
+      }
+      return { name: candidate.name.trim(), children: normalizeNodes(candidate.children ?? [], depth + 1) };
+    });
+    const names = result.map((node) => node.name.toLowerCase());
+    if (new Set(names).size !== names.length) throw new Error("Variation names must be unique at each level.");
+    return result;
+  };
+  return normalizeNodes(value, 1);
 }
 
 router.get("/game-nights", async (req, res): Promise<void> => {
@@ -293,10 +321,11 @@ router.get("/game-nights/:gameNightId", async (req, res): Promise<void> => {
     eq(gameNightMembershipsTable.gameNightId, night.id),
     isHost ? inArray(gameNightMembershipsTable.status, ["active", "pending", "invited"]) : eq(gameNightMembershipsTable.status, "active"),
   ));
-  const [profiles, houseRules, localGames, timeline] = await Promise.all([
+  const [profiles, houseRules, localGames, selectedGames, timeline] = await Promise.all([
     db.select().from(gameNightProfilesTable).where(eq(gameNightProfilesTable.gameNightId, night.id)).orderBy(gameNightProfilesTable.name),
     db.select().from(gameNightHouseRulesTable).where(eq(gameNightHouseRulesTable.gameNightId, night.id)).orderBy(gameNightHouseRulesTable.gameSlug),
     db.select().from(gameNightLocalGamesTable).where(eq(gameNightLocalGamesTable.gameNightId, night.id)).orderBy(gameNightLocalGamesTable.title),
+    db.select().from(gameNightGamesTable).where(eq(gameNightGamesTable.gameNightId, night.id)).orderBy(gameNightGamesTable.title),
     db.select().from(gameSessionsTable).where(and(
       eq(gameSessionsTable.gameNightId, night.id),
       eq(gameSessionsTable.status, "complete"),
@@ -334,6 +363,12 @@ router.get("/game-nights/:gameNightId", async (req, res): Promise<void> => {
       scorekeeperModes: game.scorekeeperModes,
       variations: game.variations,
       createdAt: game.createdAt.toISOString(),
+    })),
+    selectedGames: selectedGames.map((game) => ({
+      gameSlug: game.gameSlug,
+      title: game.title,
+      variationTree: game.variationTree,
+      addedAt: game.createdAt.toISOString(),
     })),
     timeline: timeline.map(serializeSession),
   }));
@@ -627,6 +662,83 @@ router.delete("/game-nights/:gameNightId/local-games/:localGameId", async (req, 
     return;
   }
   res.status(204).json(DeleteGameNightLocalGameResponse.parse(undefined));
+});
+
+router.put("/game-nights/:gameNightId/games/:gameSlug", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  const params = SaveGameNightGameParams.safeParse(req.params);
+  const body = SaveGameNightGameBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Choose a game and valid variation list." });
+    return;
+  }
+  if (!await getHostNight(params.data.gameNightId, userId)) {
+    res.status(403).json({ error: "Only the Game Night host can edit its game navigation." });
+    return;
+  }
+  let variationTree;
+  try {
+    variationTree = normalizeVariationTree(body.data.variationTree);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : "Variation tree is invalid." });
+    return;
+  }
+  let title = "";
+  const [localGame] = await db.select().from(gameNightLocalGamesTable).where(and(
+    eq(gameNightLocalGamesTable.gameNightId, params.data.gameNightId),
+    eq(gameNightLocalGamesTable.slug, params.data.gameSlug),
+  ));
+  if (localGame) {
+    title = localGame.title;
+  } else {
+    const catalog = await loadCatalogState();
+    const catalogGame = catalog.games.find((game) => game.slug === params.data.gameSlug);
+    if (!catalogGame) {
+      res.status(404).json({ error: "Catalog game not found." });
+      return;
+    }
+    title = catalogGame.title;
+  }
+  const [saved] = await db.insert(gameNightGamesTable).values({
+    gameNightId: params.data.gameNightId,
+    gameSlug: params.data.gameSlug,
+    title,
+    variationTree,
+    addedByUserId: userId,
+  }).onConflictDoUpdate({
+    target: [gameNightGamesTable.gameNightId, gameNightGamesTable.gameSlug],
+    set: { title, variationTree, updatedAt: new Date() },
+  }).returning();
+  res.json(SaveGameNightGameResponse.parse({
+    gameSlug: saved.gameSlug,
+    title: saved.title,
+    variationTree: saved.variationTree,
+    addedAt: saved.createdAt.toISOString(),
+  }));
+});
+
+router.delete("/game-nights/:gameNightId/games/:gameSlug", async (req, res): Promise<void> => {
+  const userId = requireUser(req, res);
+  if (!userId) return;
+  const params = RemoveGameNightGameParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid game selection." });
+    return;
+  }
+  if (!await getHostNight(params.data.gameNightId, userId)) {
+    res.status(403).json({ error: "Only the Game Night host can edit its game navigation." });
+    return;
+  }
+  const [removed] = await db.delete(gameNightGamesTable).where(and(
+    eq(gameNightGamesTable.gameNightId, params.data.gameNightId),
+    eq(gameNightGamesTable.gameSlug, params.data.gameSlug),
+  )).returning({ id: gameNightGamesTable.id });
+  if (!removed) {
+    res.status(404).json({ error: "Game selection not found." });
+    return;
+  }
+  res.status(204).json(RemoveGameNightGameResponse.parse(undefined));
 });
 
 export default router;
