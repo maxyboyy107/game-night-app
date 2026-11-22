@@ -18,35 +18,35 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: pnpm/action-setup@v4
-    with:
-      version: 10
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
-    - uses: actions/setup-node@v4
-    with:
-      node-version: 22
-      cache: pnpm
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
 
-    - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile
 
-    - name: Build frontend
-    run: pnpm --filter @workspace/games-io build
-    env:
-      PORT: 4173
-      BASE_PATH: /game-night-app/
+      - name: Build frontend
+        run: pnpm --filter @workspace/games-io build
+        env:
+          PORT: 4173
+          BASE_PATH: /game-night-app/
 
-    - uses: actions/upload-pages-artifact@v3
-      with:
-      path: artifacts/games-io/dist/public
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/games-io/dist/public
 
-deploy:
-  needs: build
-  runs-on: ubuntu-latest
-  environment:
-    name: github-pages
-    url: ${{ steps.deployment.outputs.page_url }}
-  steps:
-    - id: deployment
-    uses: actions/deploy-pages@v4
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
